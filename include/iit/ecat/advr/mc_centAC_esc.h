@@ -95,26 +95,59 @@ struct PROC_FAULT {
     uint16_t  c28_bits:4;
 };
 
+#define CHECK_FAULT (o,d,x)     do { if(x) { o << x << d;} } while(0)
+
 struct BIT_FAULT {
 
-       uint16_t  m3_rxpdo_pos_ref:1;
-       uint16_t  m3_rxpdo_vel_ref:1;
-       uint16_t  m3_rxpdo_tor_ref:1;
-       uint16_t  m3_flag_1:1;
-       uint16_t  m3_fault_hardware:1;
-       uint16_t  m3_params_out_of_range:1;
-       uint16_t  m3_flag_2:1;
-       uint16_t  m3_flag_3:1;
-       uint16_t  m3_link_enc_error_reading:1;
-       uint16_t  m3_link_enc_hw_error:1;
-       uint16_t  m3_defl_enc_error_reading:1;
-       uint16_t  m3_defl_enc_hw_error:1;
- 
+        uint16_t  m3_rxpdo_pos_ref:1;
+        uint16_t  m3_rxpdo_vel_ref:1;
+        uint16_t  m3_rxpdo_tor_ref:1;
+        uint16_t  m3_flag_1:1;
+        uint16_t  m3_fault_hardware:1;
+        uint16_t  m3_params_out_of_range:1;
+        uint16_t  m3_flag_2:1;
+        uint16_t  m3_flag_3:1;
+        uint16_t  m3_link_enc_error_reading:1;
+        uint16_t  m3_link_enc_hw_error:1;
+        uint16_t  m3_defl_enc_error_reading:1;
+        uint16_t  m3_defl_enc_hw_error:1;
 
-       uint16_t  c28_motor_enc_error_reading:1;
-       uint16_t  c28_motor_enc_hw_error:1;
-       uint16_t  c28_Max_cur_limited_for_temp:1;
-       uint16_t  c28_irq_alive:1;
+
+        uint16_t  c28_motor_enc_error_reading:1;
+        uint16_t  c28_motor_enc_hw_error:1;
+        uint16_t  c28_Max_cur_limited_for_temp:1;
+        uint16_t  c28_irq_alive:1;
+       
+        std::ostream& dump ( std::ostream& os, const std::string delim ) const {
+       
+            //CHECK_FAULT(os,delim, m3_rxpdo_pos_ref);
+            do { if(m3_rxpdo_pos_ref) { os << "m3_rxpdo_pos_ref" << delim;} } while(0);
+            os << m3_rxpdo_pos_ref << delim;
+            os << m3_rxpdo_vel_ref << delim;
+            os << m3_rxpdo_tor_ref << delim;
+            os << m3_fault_hardware << delim;
+            os << m3_params_out_of_range << delim;
+            os << m3_link_enc_error_reading << delim;
+            os << m3_link_enc_hw_error << delim;
+            os << m3_defl_enc_error_reading << delim;
+            os << m3_defl_enc_hw_error << delim;
+            os << c28_motor_enc_error_reading << delim;
+            os << c28_motor_enc_hw_error << delim;
+            //os << std::endl;
+            return os;
+        }
+        
+        void fprint ( FILE *fp ) {
+            std::ostringstream oss;
+            dump(oss,"\t");
+            fprintf ( fp, "%s", oss.str().c_str() );
+        }
+        int sprint ( char *buff, size_t size ) {
+            std::ostringstream oss;
+            dump(oss,"\t");
+            return snprintf ( buff, size, "%s", oss.str().c_str() );
+        }
+        
 };
 
 typedef union{
@@ -167,8 +200,9 @@ class CentAcESC :
     public Motor {
 
 public:
-    typedef BasicEscWrapper<McEscPdoTypes,CentAcEscSdoTypes> Base;
-    typedef PDO_log<CentAcLogTypes>                          Log;
+    typedef BasicEscWrapper<McEscPdoTypes,CentAcEscSdoTypes>    Base;
+    typedef PDO_log<CentAcLogTypes>                             Log;
+    typedef PDO_log<BIT_FAULT>                                  FaultLog;
 
     CentAcESC ( const ec_slavet& slave_descriptor ) :
         Base ( slave_descriptor ),
@@ -542,6 +576,7 @@ public :
 
         centAC_fault_t fault;
         fault.all = rx_pdo.fault;
+        fault_log.push_back(fault.bit);
         //DPRINTF("[%d]fault 0x%04X\n", Joint_robot_id, fault.all );
         //fault.bit.
         tx_pdo.fault_ack = fault.all & 0x7FFF;
@@ -707,6 +742,8 @@ private:
     stat_t  s_rtt;
 
     objd_t * SDOs;
+    
+    FaultLog    fault_log;
     
     iit::advr::Ec_slave_pdo pb_rx_pdo;
             

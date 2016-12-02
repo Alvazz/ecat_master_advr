@@ -18,6 +18,7 @@ class PDO_log {
 public:
     typedef EscLogTypes    log_t;
 
+    PDO_log ( void ) : log_filename ( "/dev/null" ) { esc_log.set_capacity ( DEFAULT_LOG_SIZE ); }
     PDO_log ( std::string filename, uint32_t capacity ) : log_filename ( filename ) {
         esc_log.set_capacity ( capacity );
     }
