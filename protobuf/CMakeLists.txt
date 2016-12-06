@@ -25,10 +25,12 @@ set(msgs
   power_pack_pdo.proto
   foot_sens_pdo.proto
   ecat_pdo.proto
-  ${PROTOBUF_IMPORT_DIRS}/quaternion.proto
-  ${PROTOBUF_IMPORT_DIRS}/vector2d.proto
-  ${PROTOBUF_IMPORT_DIRS}/header.proto
-  ${PROTOBUF_IMPORT_DIRS}/time.proto
+  header.proto
+  time.proto
+#  ${PROTOBUF_IMPORT_DIRS}/header.proto
+#  ${PROTOBUF_IMPORT_DIRS}/quaternion.proto
+#  ${PROTOBUF_IMPORT_DIRS}/vector2d.proto
+#  ${PROTOBUF_IMPORT_DIRS}/time.proto
 )
 
 add_definitions(-fPIC)
