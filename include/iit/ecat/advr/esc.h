@@ -66,8 +66,9 @@ enum Board_type : uint16_t {
     HI_PWR_AC_MC    = 0x10,
     HI_PWR_DC_MC    = 0x11,
     LO_PWR_DC_MC    = 0x12,
-    LO_PWR_SPH_MC   = 0x13,
-    LO_PWR_SPH_MCBRK= 0x14,
+    LO_PWR_HAND_MC  = 0x13,
+//    LO_PWR_SPH_MC   = 0x13,
+//    LO_PWR_SPH_MCBRK= 0x14,
     CENT_AC         = 0x15,
     FT6             = 0x20,
     FOOT_SENSOR     = 0x21,
@@ -442,7 +443,7 @@ private:
 
 
 
-inline int check_cmd_ack ( int16_t cmd, int16_t ack ) {
+inline int check_cmd_ack ( uint16_t cmd, uint16_t ack ) {
     if ( ack == ( ( cmd & 0x00FF ) | CTRL_CMD_DONE ) ) {
         //DPRINTF ( "DONE 0x%04X\n", cmd );
         return EC_BOARD_OK;

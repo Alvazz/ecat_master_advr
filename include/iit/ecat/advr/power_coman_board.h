@@ -188,6 +188,8 @@ public:
         return POW_CMN_BOARD;
     }
 
+    void print_info ( void ) { return; }
+
     void init_SDOs ( void );
 
     int init ( const YAML::Node & root_cfg ) {

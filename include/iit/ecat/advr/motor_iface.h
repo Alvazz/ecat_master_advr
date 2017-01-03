@@ -131,7 +131,6 @@ public:
 
     //void set_state(ec_state state) { _actual_state = state; }
 
-    virtual int16_t get_robot_id() = 0;
     virtual uint16_t get_ESC_type(void) = 0;
     
 protected:

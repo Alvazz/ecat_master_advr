@@ -61,6 +61,28 @@ int Ec_Boards_ctrl::shutdown ( bool do_power_off ) {
 
 }
 
+template <typename T>
+void Ec_Boards_ctrl::make_board ( int ec_slave_idx ) {
+
+    int16_t rid;
+    
+    T * slave = new T ( ec_slave[ec_slave_idx] );
+    if ( slave->init ( root_cfg ) != EC_BOARD_OK ) {
+        // skip this slave
+        zombies[ec_slave_idx] = iit::ecat::ESCPtr ( slave );
+        return;
+    }
+    slaves[ec_slave_idx] = iit::ecat::ESCPtr ( slave );
+    
+    rid = slave->get_robot_id();
+    slave->print_info();
+    if ( rid != -1 ) {
+        rid2pos[rid] = ec_slave_idx;
+        pos2rid[ec_slave_idx] = rid;
+    }
+    
+}
+
 void Ec_Boards_ctrl::factory_board ( void ) {
 
     int i;
@@ -74,143 +96,59 @@ void Ec_Boards_ctrl::factory_board ( void ) {
         // BigMotor and MediumMotor
         if ( ec_slave[i].eep_id == HI_PWR_AC_MC ||
                 ec_slave[i].eep_id == HI_PWR_DC_MC ) {
-
-            HpESC * mc_slave = new HpESC ( ec_slave[i] );
-            if ( mc_slave->init ( root_cfg ) != EC_BOARD_OK ) {
-                // skip this slave
-                zombies[i] = iit::ecat::ESCPtr ( mc_slave );
-                continue;
-            }
-            slaves[i] = iit::ecat::ESCPtr ( mc_slave );
-            rid = mc_slave->get_robot_id();
-            mc_slave->print_info();
-            if ( rid != -1 ) {
-                rid2pos[rid] = i;
-                pos2rid[i] = rid;
-            }
+            
+            make_board<HpESC>(i);
         }
         ///////////////////////////////////////////////////
-        // LP Motor Coman
+        // LowPwr Motor
         else if ( ec_slave[i].eep_id == LO_PWR_DC_MC ) {
 
-            LpESC * mc_slave = new LpESC ( ec_slave[i] );
-            if ( mc_slave->init ( root_cfg ) != EC_BOARD_OK ) {
-                // skip this slave
-                zombies[i] = iit::ecat::ESCPtr ( mc_slave );
-                continue;
-            }
-            slaves[i] = iit::ecat::ESCPtr ( mc_slave );
-            rid = mc_slave->get_robot_id();
-            mc_slave->print_info();
-            if ( rid != -1 ) {
-                rid2pos[rid] = i;
-                pos2rid[i] = rid;
-            }
+            make_board<LpESC>(i);
         }
         ///////////////////////////////////////////////////
         // Centauro AC
         else if ( ec_slave[i].eep_id == CENT_AC ) {
 
-            CentAcESC * mc_slave = new CentAcESC ( ec_slave[i] );
-            if ( mc_slave->init ( root_cfg ) != EC_BOARD_OK ) {
-                // skip this slave
-                zombies[i] = iit::ecat::ESCPtr ( mc_slave );
-                continue;
-            }
-            slaves[i] = iit::ecat::ESCPtr ( mc_slave );
-            rid = mc_slave->get_robot_id();
-            mc_slave->print_info();
-            if ( rid != -1 ) {
-                rid2pos[rid] = i;
-                pos2rid[i] = rid;
-            }
+            make_board<CentAcESC>(i);
         }
-
         ///////////////////////////////////////////////////
         // FT6 Sensor
         else if ( ec_slave[i].eep_id == FT6 ) {
 
-            Ft6ESC * ft_slave = new Ft6ESC ( ec_slave[i] );
-            if ( ft_slave->init ( root_cfg ) != EC_BOARD_OK ) {
-                // skip this slave
-                zombies[i] = iit::ecat::ESCPtr ( ft_slave );
-                continue;
-            }
-            slaves[i] = iit::ecat::ESCPtr ( ft_slave );
-            rid = ft_slave->get_robot_id();
-            ft_slave->print_info();
-            if ( rid != -1 ) {
-                rid2pos[rid] = i;
-                pos2rid[i] = rid;
-            }
+            make_board<Ft6ESC>(i);
         }
-        
         ///////////////////////////////////////////////////
         // Foot Sensor
         else if ( ec_slave[i].eep_id == FOOT_SENSOR ) {
 
-            FootSensorESC * foot_sensor_slave = new FootSensorESC ( ec_slave[i] );
-            if ( foot_sensor_slave->init ( root_cfg ) != EC_BOARD_OK ) {
-                // skip this slave
-                zombies[i] = iit::ecat::ESCPtr ( foot_sensor_slave );
-                continue;
-            }
-            slaves[i] = iit::ecat::ESCPtr ( foot_sensor_slave );
-            rid = foot_sensor_slave->get_robot_id();
-            foot_sensor_slave->print_info();
-            if ( rid != -1 ) {
-                rid2pos[rid] = i;
-                pos2rid[i] = rid;
-            }
+            make_board<FootSensorESC>(i);
         }
         ///////////////////////////////////////////////////
         // Pow board
         else if ( ec_slave[i].eep_id == POW_BOARD ) {
 
-            PowESC * pow = new PowESC ( ec_slave[i] );
-            if ( pow->init ( root_cfg ) != EC_BOARD_OK ) {
-                // skip this slave
-                zombies[i] = iit::ecat::ESCPtr ( pow );
-                continue;
-            }
-            slaves[i] = iit::ecat::ESCPtr ( pow );
+            make_board<PowESC>(i);
         }
         ///////////////////////////////////////////////////
         // Pow coman board
         else if ( ec_slave[i].eep_id == POW_CMN_BOARD ) {
 
-            PowComanESC * pow = new PowComanESC ( ec_slave[i] );
-            if ( pow->init ( root_cfg ) != EC_BOARD_OK ) {
-                // skip this slave
-                zombies[i] = iit::ecat::ESCPtr ( pow );
-                continue;
-            }
-            slaves[i] = iit::ecat::ESCPtr ( pow );
+            make_board<PowComanESC>(i);
         }
         ///////////////////////////////////////////////////
         // Hubs
         else if ( ec_slave[i].eep_id == HUB ) {
 
-            HubESC * hub = new HubESC ( ec_slave[i] );
-            slaves[i] = iit::ecat::ESCPtr ( hub );
-
+            make_board<HubESC>(i);
         } else if ( ec_slave[i].eep_id == HUB_IO ) {
 
-            HubIoESC * hub = new HubIoESC ( ec_slave[i] );
-            slaves[i] = iit::ecat::ESCPtr ( hub );
+            make_board<HubIoESC>(i);
         }
         ///////////////////////////////////////////////////
         // Test
         else if ( ec_slave[i].eep_id == EC_TEST ) {
 
-            TestESC * test_slave = new TestESC ( ec_slave[i] );
-            if ( test_slave->init ( root_cfg ) != EC_BOARD_OK ) {
-                // skip this slave
-                zombies[i] = iit::ecat::ESCPtr ( test_slave );
-                continue;
-            }
-            slaves[i] = iit::ecat::ESCPtr ( test_slave );
-            test_slave->print_info();
+            make_board<TestESC>(i);
         }
         ///////////////////////////////////////////////////
         else {

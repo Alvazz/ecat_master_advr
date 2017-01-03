@@ -259,6 +259,8 @@ public:
 
 protected:
 
+    template <typename T>
+    void make_board ( int ec_slave_idx );
     void factory_board ( void );
 
     SlavesMap   slaves;

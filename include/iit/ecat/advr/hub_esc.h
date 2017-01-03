@@ -42,6 +42,10 @@ public:
         return HUB;
     }
 
+    void print_info ( void ) { return; }
+
+    virtual int init ( const YAML::Node & root_cfg ) { return EC_WRP_OK; }
+
 private:
     virtual void readPDO() {};
     virtual void writePDO() {};

@@ -132,8 +132,11 @@ public:
         print_stat ( s_rtt );
     }
 
+    virtual uint16_t get_ESC_type() {
+        return LO_PWR_DC_MC;
+    }
+
     virtual int16_t get_robot_id() {
-        //assert(sdo.Joint_robot_id != -1);
         return sdo.Joint_robot_id;
     }
 
@@ -228,9 +231,6 @@ public:
     /// Motor method implementation
     ///
     ///////////////////////////////////////////////////////
-    virtual uint16_t get_ESC_type() {
-        return LO_PWR_DC_MC;
-    }
 
     virtual const pdo_rx_t& getRxPDO() const {
         return Base::getRxPDO();
