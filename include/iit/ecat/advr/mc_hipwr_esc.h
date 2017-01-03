@@ -381,13 +381,30 @@ public :
     virtual int start ( int controller_type ) {
 
         std::vector<float> gains;
-        try {
-            gains = node_cfg["pid"]["mix_position"].as<std::vector<float>>();
-            assert ( gains.size() == 3 );
-        } catch ( std::exception &e ) {
-            DPRINTF ( "Catch Exception in %s ... %s\n", __PRETTY_FUNCTION__, e.what() );
-            return EC_BOARD_NOK;
-        }
+        
+        if ( controller_type == CTRL_SET_POS_MODE ) {
+            if ( node_cfg["pid"]["position"] ) {
+                try {
+                    gains = node_cfg["pid"]["position"].as<std::vector<float>>();
+                    assert ( gains.size() == 3 );
+                } catch ( std::exception &e ) {
+                    DPRINTF ( "Catch Exception in %s ... %s\n", __PRETTY_FUNCTION__, e.what() );
+                    return EC_BOARD_NOK;
+                }
+            }
+        } 
+        if ( controller_type == CTRL_SET_MIX_POS_MODE ) {
+            if ( node_cfg["pid"]["mix_position"] ) {
+                try {
+                    gains = node_cfg["pid"]["mix_position"].as<std::vector<float>>();
+                    assert ( gains.size() == 3 );
+                } catch ( std::exception &e ) {
+                    DPRINTF ( "Catch Exception in %s ... %s\n", __PRETTY_FUNCTION__, e.what() );
+                    return EC_BOARD_NOK;
+                }
+            }
+        } 
+
         return start ( controller_type, gains );
     }
 
@@ -437,32 +454,36 @@ public :
 #endif
     virtual int move_to ( float pos_ref, float step ) {
 
-        float       pos, tx_pos_ref;
-        uint16_t    fault;
+    float       pos, link_pos, motor_pos, tx_pos_ref;
+    uint16_t    fault;
 
-        try {
-            readSDO_byname ( "fault", fault );
-            handle_fault();
-            readSDO_byname ( "link_pos", pos );
-            readSDO_byname ( "pos_ref", tx_pos_ref );
-            tx_pos_ref = hipwr_esc::M2J ( tx_pos_ref,_sgn,_offset );
+    try {
+        readSDO_byname ( "fault", fault );
+        handle_fault();
+        readSDO_byname ( "link_pos", link_pos );
+        readSDO_byname ( "motor_pos", motor_pos );
+        readSDO_byname ( "pos_ref", tx_pos_ref );
+        tx_pos_ref = hipwr_esc::M2J ( tx_pos_ref,_sgn,_offset );
 
-            if ( fabs ( pos - pos_ref ) > step ) {
-                if ( pos > pos_ref ) {
-                    tx_pos_ref -= step;
-                } else {
-                    tx_pos_ref += step;
-                }
-
-                writeSDO_byname ( "pos_ref", tx_pos_ref );
-                DPRINTF("%d move to %f %f %f\n", Joint_robot_id, pos_ref, tx_pos_ref, pos);
-                return 0;
-
+        // use motor_position !!!
+        pos = motor_pos;
+        
+        if ( fabs ( pos - pos_ref ) > step ) {
+            if ( pos > pos_ref ) {
+                tx_pos_ref -= step;
             } else {
-                DPRINTF ( "%d move to %f %f %f\n", Joint_robot_id, pos_ref, tx_pos_ref, pos );
-                return 1;
-
+                tx_pos_ref += step;
             }
+
+            writeSDO_byname ( "pos_ref", tx_pos_ref );
+            DPRINTF("%d move to %f %f %f\n", Joint_robot_id, pos_ref, tx_pos_ref, pos);
+            return 0;
+
+        } else {
+            DPRINTF ( "%d move to %f %f %f\n", Joint_robot_id, pos_ref, tx_pos_ref, pos );
+            return 1;
+
+        }
 
         } catch ( EscWrpError &e ) {
             DPRINTF ( "Catch Exception %s ... %s\n", __FUNCTION__, e.what() );
