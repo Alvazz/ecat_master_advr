@@ -106,6 +106,12 @@ void Ec_Boards_ctrl::factory_board ( void ) {
             make_board<LpESC>(i);
         }
         ///////////////////////////////////////////////////
+        // LowPwr Hand
+        else if ( ec_slave[i].eep_id == LO_PWR_HAND_MC ) {
+
+            make_board<LpHandESC>(i);
+        }
+        ///////////////////////////////////////////////////
         // Centauro AC
         else if ( ec_slave[i].eep_id == CENT_AC ) {
 

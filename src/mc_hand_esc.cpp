@@ -1,71 +1,10 @@
-#include <iit/ecat/advr/mc_lowpwr_esc.h>
+#include <iit/ecat/advr/mc_hand_esc.h>
 #include <string>
 
 using namespace iit::ecat;
 using namespace iit::ecat::advr;
 
-static char acName1000[] = "Device Type";
-static char acName1000_0[] = "Device Type";
-static char acName1008[] = "Manufacturer Device Name";
-static char acName1008_0[] = "Manufacturer Device Name";
-static char acName1009[] = "Manufacturer Hardware Version";
-static char acName1009_0[] = "Manufacturer Hardware Version";
-static char acName100A[] = "Manufacturer Software Version";
-static char acName100A_0[] = "Manufacturer Software Version";
-static char acName1018[] = "Identity Object";
-static char acName1018_0[] = "Number of Elements";
-static char acName1018_1[] = "Vendor ID";
-static char acName1018_2[] = "Product Code";
-static char acName1018_3[] = "Revision Number";
-static char acName1018_4[] = "Serial Number";
-static char acName1600[] = "Receive PDO Mapping";
-static char acName1600_0[] = "Number of Elements";
-static char acName1600_n[] = "Mapped Object";
-static char acName1A00[] = "Transmit PDO Mapping";
-static char acName1A00_0[] = "Number of Elements";
-static char acName1A00_n[] = "Mapped Object";
-static char acName1C00[] = "Sync Manager Communication Type";
-static char acName1C00_0[] = "Number of Elements";
-static char acName1C00_1[] = "Communications Type SM0";
-static char acName1C00_2[] = "Communications Type SM1";
-static char acName1C00_3[] = "Communications Type SM2";
-static char acName1C00_4[] = "Communications Type SM3";
-static char acName1C12[] = "Sync Manager 2 PDO Assignment";
-static char acName1C12_0[] = "Number of Elements";
-static char acName1C12_1[] = "PDO Mapping";
-static char acName1C13[] = "Sync Manager 3 PDO Assignment";
-static char acName1C13_0[] = "Number of Elements";
-static char acName1C13_1[] = "PDO Mapping";
 
-static char acName6000[] = "Inputs";
-static char acName6000_0[] = "Number of Elements";
-static char acName6000_1[] = "rel_enc";
-static char acName6000_2[] = "abs_enc";
-static char acName6000_3[] = "adc";
-static char acName6000_4[] = "ain";
-static char acName6000_5[] = "hall";
-static char acName6000_6[] = "pwm";
-static char acName6000_rtt[] = "rtt";
-static char acName6000_pid_out[] = "pid_out";
-static char acName6000_pos[] = "position";
-static char acName6000_vel[] = "velocity";
-static char acName6000_tor[] = "torque";
-static char acName6000_tor_D[] = "tor_D";
-static char acName6000_curr[] = "curr";
-static char acName6000_temp[] = "temperature";
-static char acName6000_fault[] = "fault";
-
-static char acName7000[] = "Outputs";
-static char acName7000_0[] = "Number of Elements";
-static char acName7000_1[] = "pos_ref";
-static char acName7000_2[] = "tor_offs";
-static char acName7000_3[] = "PGain";
-static char acName7000_4[] = "IGain";
-static char acName7000_5[] = "DGain";
-static char acName7000_6[] = "ts";
-
-static char acName8000[] = "Flash Parameter";
-static char acName8000_0[] = "Number of Elements";
 static char acName8000_1[] = "Block control";
 static char acName8000_2[] = "nonius offset low";
 static char acName8000_3[] = "pos_gain_P";
@@ -121,12 +60,12 @@ static const iit::ecat::objd_t source_SDOs[] = {
     { 0x6000, 2, DTYPE_REAL32,          32, ATYPE_RO, "motor_pos",      0},
     { 0x6000, 3, DTYPE_REAL32,          32, ATYPE_RO, "link_vel",       0},
     { 0x6000, 4, DTYPE_INTEGER16,       16, ATYPE_RO, "motor_vel",      0},
-    { 0x6000, 5, DTYPE_INTEGER16,       16, ATYPE_RO, "torque",     0},
-    { 0x6000, 6, DTYPE_UNSIGNED16,      16, ATYPE_RO, "temperature",        0},
-    { 0x6000, 7, DTYPE_UNSIGNED16,      16, ATYPE_RO, "fault",      0},
-    { 0x6000, 8, DTYPE_UNSIGNED16,      16, ATYPE_RO, "rtt",        0},
-    { 0x6000, 9, DTYPE_UNSIGNED16,      16, ATYPE_RO, "op_idx_ack",     0},
-    { 0x6000, 10, DTYPE_REAL32,         32, ATYPE_RO, "aux",        0},
+    { 0x6000, 5, DTYPE_INTEGER16,       16, ATYPE_RO, "analog_1",       0},
+    { 0x6000, 6, DTYPE_UNSIGNED16,      16, ATYPE_RO, "temperature",    0},
+    { 0x6000, 7, DTYPE_UNSIGNED16,      16, ATYPE_RO, "fault",          0},
+    { 0x6000, 8, DTYPE_UNSIGNED16,      16, ATYPE_RO, "rtt",            0},
+    { 0x6000, 9, DTYPE_INTEGER16,       16, ATYPE_RO, "analog_2",       0},
+    { 0x6000, 10, DTYPE_INTEGER16,      16, ATYPE_RO, "analog_3",       0},
     // SD0 0x7000
     { 0x7000, 1, DTYPE_REAL32,          32, ATYPE_RW, "pos_ref",        0},
     { 0x7000, 2, DTYPE_INTEGER16,       16, ATYPE_RW, "vel_ref",        0},
@@ -194,7 +133,7 @@ static const iit::ecat::objd_t source_SDOs[] = {
 
 
 
-void LpESC::init_SDOs ( void ) {
+void LpHandESC::init_SDOs ( void ) {
 
     int objd_num, i = 0;
 
@@ -204,78 +143,78 @@ void LpESC::init_SDOs ( void ) {
     memcpy ( ( void* ) SDOs, source_SDOs, sizeof ( source_SDOs ) );
 
     //0x6000
-    SDOs[i++].data = (void*)&LpESC::rx_pdo.link_pos;
-    SDOs[i++].data = (void*)&LpESC::rx_pdo.motor_pos;
-    SDOs[i++].data = (void*)&LpESC::rx_pdo.link_vel;
-    SDOs[i++].data = (void*)&LpESC::rx_pdo.motor_vel;
-    SDOs[i++].data = (void*)&LpESC::rx_pdo.torque;
-    SDOs[i++].data = (void*)&LpESC::rx_pdo.temperature;
-    SDOs[i++].data = (void*)&LpESC::rx_pdo.fault;
-    SDOs[i++].data = (void*)&LpESC::rx_pdo.rtt;
-    SDOs[i++].data = (void*)&LpESC::rx_pdo.op_idx_ack;
-    SDOs[i++].data = (void*)&LpESC::rx_pdo.aux;
+    SDOs[i++].data = (void*)&LpHandESC::rx_pdo.link_pos;
+    SDOs[i++].data = (void*)&LpHandESC::rx_pdo.motor_pos;
+    SDOs[i++].data = (void*)&LpHandESC::rx_pdo.link_vel;
+    SDOs[i++].data = (void*)&LpHandESC::rx_pdo.motor_vel;
+    SDOs[i++].data = (void*)&LpHandESC::rx_pdo.analog1;
+    SDOs[i++].data = (void*)&LpHandESC::rx_pdo.temperature;
+    SDOs[i++].data = (void*)&LpHandESC::rx_pdo.fault;
+    SDOs[i++].data = (void*)&LpHandESC::rx_pdo.rtt;
+    SDOs[i++].data = (void*)&LpHandESC::rx_pdo.analog2;
+    SDOs[i++].data = (void*)&LpHandESC::rx_pdo.analog3;
 
     //0x7000
-    SDOs[i++].data = (void*)&LpESC::tx_pdo.pos_ref;
-    SDOs[i++].data = (void*)&LpESC::tx_pdo.vel_ref;
-    SDOs[i++].data = (void*)&LpESC::tx_pdo.tor_ref;
-    SDOs[i++].data = (void*)&LpESC::tx_pdo.gain_0;
-    SDOs[i++].data = (void*)&LpESC::tx_pdo.gain_1;
-    SDOs[i++].data = (void*)&LpESC::tx_pdo.gain_2;
-    SDOs[i++].data = (void*)&LpESC::tx_pdo.gain_3;
-    SDOs[i++].data = (void*)&LpESC::tx_pdo.gain_4;
-    SDOs[i++].data = (void*)&LpESC::tx_pdo.fault_ack;
-    SDOs[i++].data = (void*)&LpESC::tx_pdo.ts;
-    SDOs[i++].data = (void*)&LpESC::tx_pdo.op_idx_aux;
-    SDOs[i++].data = (void*)&LpESC::tx_pdo.aux;
+    SDOs[i++].data = (void*)&LpHandESC::tx_pdo.pos_ref;
+    SDOs[i++].data = (void*)&LpHandESC::tx_pdo.vel_ref;
+    SDOs[i++].data = (void*)&LpHandESC::tx_pdo.tor_ref;
+    SDOs[i++].data = (void*)&LpHandESC::tx_pdo.gain_0;
+    SDOs[i++].data = (void*)&LpHandESC::tx_pdo.gain_1;
+    SDOs[i++].data = (void*)&LpHandESC::tx_pdo.gain_2;
+    SDOs[i++].data = (void*)&LpHandESC::tx_pdo.gain_3;
+    SDOs[i++].data = (void*)&LpHandESC::tx_pdo.gain_4;
+    SDOs[i++].data = (void*)&LpHandESC::tx_pdo.fault_ack;
+    SDOs[i++].data = (void*)&LpHandESC::tx_pdo.ts;
+    SDOs[i++].data = (void*)&LpHandESC::tx_pdo.op_idx_aux;
+    SDOs[i++].data = (void*)&LpHandESC::tx_pdo.aux;
     
     // 0x8000
-    SDOs[i++].data = ( void* ) &LpESC::sdo.Block_control;
-    SDOs[i++].data = ( void* ) &LpESC::sdo.nonius_offset_low;
-    SDOs[i++].data = ( void* ) &LpESC::sdo.PosGainP;
-    SDOs[i++].data = ( void* ) &LpESC::sdo.PosGainI;
-    SDOs[i++].data = ( void* ) &LpESC::sdo.PosGainD;
-    SDOs[i++].data = ( void* ) &LpESC::sdo.TorGainP;
-    SDOs[i++].data = ( void* ) &LpESC::sdo.TorGainI;
-    SDOs[i++].data = ( void* ) &LpESC::sdo.TorGainD;
-    SDOs[i++].data = ( void* ) &LpESC::sdo.Torque_Mult;
-    SDOs[i++].data = ( void* ) &LpESC::sdo.Pos_I_lim;
-    SDOs[i++].data = ( void* ) &LpESC::sdo.Tor_I_lim;
-    SDOs[i++].data = ( void* ) &LpESC::sdo.Min_pos;
-    SDOs[i++].data = ( void* ) &LpESC::sdo.Max_pos;
-    SDOs[i++].data = ( void* ) &LpESC::sdo.nonius_offset_high;
-    SDOs[i++].data = ( void* ) &LpESC::sdo.Max_tor;
-    SDOs[i++].data = ( void* ) &LpESC::sdo.Max_cur;
-    SDOs[i++].data = ( void* ) &LpESC::sdo.Enc_offset_1;
-    SDOs[i++].data = ( void* ) &LpESC::sdo.Enc_offset_2;
-    SDOs[i++].data = ( void* ) &LpESC::sdo.Torque_Offset;
-    SDOs[i++].data = ( void* ) &LpESC::sdo.ConfigFlags;
-    SDOs[i++].data = ( void* ) &LpESC::sdo.ConfigFlags2;
-    SDOs[i++].data = ( void* ) &LpESC::sdo.NumEncoderLines;
-    SDOs[i++].data = ( void* ) &LpESC::sdo.ImpedancePosGainP;
-    SDOs[i++].data = ( void* ) &LpESC::sdo.nonius_offset2_low;
-    SDOs[i++].data = ( void* ) &LpESC::sdo.ImpedancePosGainD;
-    SDOs[i++].data = ( void* ) &LpESC::sdo.Num_Abs_counts_rev;
-    SDOs[i++].data = ( void* ) &LpESC::sdo.MaxPWM;
-    SDOs[i++].data = ( void* ) &LpESC::sdo.Gearbox_ratio;
-    SDOs[i++].data = ( void* ) &LpESC::sdo.ulCalPosition;
-    SDOs[i++].data = ( void* ) &LpESC::sdo.Cal_Abs_Position;
-    SDOs[i++].data = ( void* ) &LpESC::sdo.Cal_Abs2_Position;
-    SDOs[i++].data = ( void* ) &LpESC::sdo.nonius_offset2_high;
-    SDOs[i++].data = ( void* ) &LpESC::sdo.Joint_number;
-    SDOs[i++].data = ( void* ) &LpESC::sdo.Joint_robot_id;
-    SDOs[i++].data = ( void* ) &LpESC::sdo.Target_velocity;
+    SDOs[i++].data = ( void* ) &LpHandESC::sdo.Block_control;
+    SDOs[i++].data = ( void* ) &LpHandESC::sdo.nonius_offset_low;
+    SDOs[i++].data = ( void* ) &LpHandESC::sdo.PosGainP;
+    SDOs[i++].data = ( void* ) &LpHandESC::sdo.PosGainI;
+    SDOs[i++].data = ( void* ) &LpHandESC::sdo.PosGainD;
+    SDOs[i++].data = ( void* ) &LpHandESC::sdo.TorGainP;
+    SDOs[i++].data = ( void* ) &LpHandESC::sdo.TorGainI;
+    SDOs[i++].data = ( void* ) &LpHandESC::sdo.TorGainD;
+    SDOs[i++].data = ( void* ) &LpHandESC::sdo.Torque_Mult;
+    SDOs[i++].data = ( void* ) &LpHandESC::sdo.Pos_I_lim;
+    SDOs[i++].data = ( void* ) &LpHandESC::sdo.Tor_I_lim;
+    SDOs[i++].data = ( void* ) &LpHandESC::sdo.Min_pos;
+    SDOs[i++].data = ( void* ) &LpHandESC::sdo.Max_pos;
+    SDOs[i++].data = ( void* ) &LpHandESC::sdo.nonius_offset_high;
+    SDOs[i++].data = ( void* ) &LpHandESC::sdo.Max_tor;
+    SDOs[i++].data = ( void* ) &LpHandESC::sdo.Max_cur;
+    SDOs[i++].data = ( void* ) &LpHandESC::sdo.Enc_offset_1;
+    SDOs[i++].data = ( void* ) &LpHandESC::sdo.Enc_offset_2;
+    SDOs[i++].data = ( void* ) &LpHandESC::sdo.Torque_Offset;
+    SDOs[i++].data = ( void* ) &LpHandESC::sdo.ConfigFlags;
+    SDOs[i++].data = ( void* ) &LpHandESC::sdo.ConfigFlags2;
+    SDOs[i++].data = ( void* ) &LpHandESC::sdo.NumEncoderLines;
+    SDOs[i++].data = ( void* ) &LpHandESC::sdo.ImpedancePosGainP;
+    SDOs[i++].data = ( void* ) &LpHandESC::sdo.nonius_offset2_low;
+    SDOs[i++].data = ( void* ) &LpHandESC::sdo.ImpedancePosGainD;
+    SDOs[i++].data = ( void* ) &LpHandESC::sdo.Num_Abs_counts_rev;
+    SDOs[i++].data = ( void* ) &LpHandESC::sdo.MaxPWM;
+    SDOs[i++].data = ( void* ) &LpHandESC::sdo.Gearbox_ratio;
+    SDOs[i++].data = ( void* ) &LpHandESC::sdo.ulCalPosition;
+    SDOs[i++].data = ( void* ) &LpHandESC::sdo.Cal_Abs_Position;
+    SDOs[i++].data = ( void* ) &LpHandESC::sdo.Cal_Abs2_Position;
+    SDOs[i++].data = ( void* ) &LpHandESC::sdo.nonius_offset2_high;
+    SDOs[i++].data = ( void* ) &LpHandESC::sdo.Joint_number;
+    SDOs[i++].data = ( void* ) &LpHandESC::sdo.Joint_robot_id;
+    SDOs[i++].data = ( void* ) &LpHandESC::sdo.Target_velocity;
     
     // 0x8001
-    SDOs[i++].data = ( void* ) &LpESC::sdo.firmware_version;
-    SDOs[i++].data = ( void* ) &LpESC::sdo.enable_pdo_gains;
-    SDOs[i++].data = ( void* ) &LpESC::sdo.set_ctrl_status;
-    SDOs[i++].data = ( void* ) &LpESC::sdo.get_ctrl_status;
-    SDOs[i++].data = ( void* ) &LpESC::sdo.V_batt_filt_100ms;
-    SDOs[i++].data = ( void* ) &LpESC::sdo.T_inv_filt_100ms;
-    SDOs[i++].data = ( void* ) &LpESC::sdo.T_mot1_filt_100ms;
-    SDOs[i++].data = ( void* ) &LpESC::sdo.flash_params_cmd;
-    SDOs[i++].data = ( void* ) &LpESC::sdo.flash_params_cmd_ack;
+    SDOs[i++].data = ( void* ) &LpHandESC::sdo.firmware_version;
+    SDOs[i++].data = ( void* ) &LpHandESC::sdo.enable_pdo_gains;
+    SDOs[i++].data = ( void* ) &LpHandESC::sdo.set_ctrl_status;
+    SDOs[i++].data = ( void* ) &LpHandESC::sdo.get_ctrl_status;
+    SDOs[i++].data = ( void* ) &LpHandESC::sdo.V_batt_filt_100ms;
+    SDOs[i++].data = ( void* ) &LpHandESC::sdo.T_inv_filt_100ms;
+    SDOs[i++].data = ( void* ) &LpHandESC::sdo.T_mot1_filt_100ms;
+    SDOs[i++].data = ( void* ) &LpHandESC::sdo.flash_params_cmd;
+    SDOs[i++].data = ( void* ) &LpHandESC::sdo.flash_params_cmd_ack;
     // end marker
     SDOs[i++].data = 0;
 

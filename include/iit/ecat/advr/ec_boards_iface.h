@@ -19,6 +19,7 @@
 #include <iit/ecat/advr/test_esc.h>
 #include <iit/ecat/advr/mc_hipwr_esc.h>
 #include <iit/ecat/advr/mc_lowpwr_esc.h>
+#include <iit/ecat/advr/mc_hand_esc.h>
 #include <iit/ecat/advr/mc_centAC_esc.h>
 #include <iit/ecat/advr/ft6_esc.h>
 #include <iit/ecat/advr/foot_sensor_esc.h>

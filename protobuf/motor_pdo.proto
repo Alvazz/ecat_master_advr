@@ -52,3 +52,16 @@ message Motor_xt_rx_pdo {
     optional float motor_temp  = 11;
     optional float board_temp  = 12;
 }
+
+message McHand_rx_pdo {
+    required float  link_pos    = 1;
+    required float  motor_pos   = 2;
+    required float  link_vel    = 3;
+    required float  motor_vel   = 4;
+    required int32  analog_1    = 5;
+    required uint32 temperature = 6;
+    required uint32 fault       = 7;
+    required uint32 rtt         = 8;
+    optional int32  analog_2    = 9;
+    optional int32  analog_3    = 10;
+}
