@@ -366,7 +366,7 @@ public:
         // we log when receive PDOs
         start_log ( true );
 
-        XDDP_pipe::init ("Motor_id_"+std::to_string ( get_robot_id() ));
+        XDDP_pipe::init ("Hand_id_"+std::to_string ( get_robot_id() ));
         
         return EC_WRP_OK;
 
