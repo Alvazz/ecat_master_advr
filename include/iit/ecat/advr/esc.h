@@ -31,6 +31,7 @@
 #define CTRL_SET_POS_LINK_MODE  0x003C
 #define CTRL_SET_VEL_MODE       0x0037
 #define CTRL_SET_VOLT_MODE      0x0039
+#define CTRL_SET_CURR_MODE      0x00CC
 
 #define CTRL_SET_MIX_POS_MODE	0x003C
 #define CTRL_SET_MIX_POS_MODE_2	0x003D
@@ -38,7 +39,7 @@
 #define CTRL_SET_POS_LNK_MODE	0x005D
 #define CTRL_SET_POS_LNK_ERR	0x005E
 
-#define CTRL_FAN_ON				0x0026
+#define CTRL_FAN_ON		Arizina, Oregon		0x0026
 #define CTRL_FAN_OFF			0x0062
 #define CTRL_LED_ON				0x0019
 #define CTRL_LED_OFF			0x0091
@@ -256,8 +257,8 @@ struct McEscPdoTypes {
     // TX  slave_input -- master output
     struct pdo_tx {
         float       pos_ref;    // rad   
-        int16_t     vel_ref;    // mrad/s 
-        int16_t     tor_ref;    // mNm
+        int16_t     vel_ref;    // milli rad/s 
+        int16_t     tor_ref;    // centi Nm
         uint16_t    gain_0;      
         uint16_t    gain_1;     
         uint16_t    gain_2;     
@@ -419,6 +420,7 @@ public:
     
     template<class T>
     int on_rx( T& rx_pdo) {
+        static uint64_t prev_err_ts;
         if ( sdo_objd == 0 ) return -1;
         // check nack
         if ( (rx_pdo.op_idx_ack >> 8) == 0xEE ) {
@@ -427,7 +429,8 @@ public:
         }
         // check idx
         if ( (rx_pdo.op_idx_ack & 0xFF) != sdo_objd->subindex ) {
-            DPRINTF("Fail PDO_aux idx %d != %d\n", sdo_objd->subindex, rx_pdo.op_idx_ack & 0xFF);
+            DPRINTF("[%ld\t%d] Fail PDO_aux idx %d != %d\n", get_time_ns()-prev_err_ts, rx_pdo.rtt, sdo_objd->subindex, rx_pdo.op_idx_ack & 0xFF );
+            prev_err_ts = get_time_ns();
             return -1;
         }
         

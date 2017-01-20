@@ -310,7 +310,7 @@ public:
 
         std::ostringstream oss;
         float act_position;
-        int32_t fault;
+        uint16_t fault;
         //uint16_t gain;
         float gain;
         
@@ -440,15 +440,18 @@ public:
     }
 
     /////////////////////////////////////////////
-    // set pdo data
+    // TODO check valid range
     virtual int set_posRef ( float joint_pos ) {
-        tx_pdo.pos_ref = lopwr_esc::J2M(joint_pos,_sgn,-_offset);
+        tx_pdo.pos_ref = lopwr_esc::J2M(joint_pos,_sgn,_offset);
+        return EC_BOARD_OK;
     }
     virtual int set_velRef ( float joint_vel ) {
-        tx_pdo.vel_ref = joint_vel;
+        tx_pdo.vel_ref = (int16_t)(joint_vel/1000);
+        return EC_BOARD_OK;
     }
     virtual int set_torRef ( float joint_tor ) {
-        tx_pdo.tor_ref = joint_tor;
+        tx_pdo.tor_ref = (int16_t)(joint_tor/100);
+        return EC_BOARD_OK;
     }
 #if 0
     virtual int set_torOffs ( float tor_offs ) {

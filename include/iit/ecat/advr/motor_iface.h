@@ -119,7 +119,7 @@ public:
     //virtual int set_posGainI ( float i_gain )  = 0;
     //virtual int set_posGainD ( float d_gain )  = 0;
 
-    virtual int move_to ( float pos, float step ) = 0; //{ return 0; }
+    virtual int move_to ( float pos, float step ) = 0;
 
     //virtual int get_pos(float &joint_pos)   = 0;
     //virtual int get_posGainP(float &p_gain) = 0;

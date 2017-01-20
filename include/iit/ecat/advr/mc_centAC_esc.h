@@ -267,7 +267,6 @@ protected :
         
         ///////////////////////////////////////////////////
         // - pdo_aux 
-        curr_pdo_aux = &pdo_aux_it->second;
         curr_pdo_aux->on_rx(rx_pdo);
         // if pos_ref_fb apply transformation
         if ( curr_pdo_aux->get_idx() == 1 ) {
@@ -584,18 +583,22 @@ public :
 
     /////////////////////////////////////////////
     // set pdo data
+    // TODO check valid range
     virtual int set_posRef ( float joint_pos ) {
         tx_pdo.pos_ref = centac_esc::J2M(joint_pos,_sgn,_offset);
+        return EC_BOARD_OK;
     }
     virtual int set_velRef ( float joint_vel ) {
-        tx_pdo.vel_ref = joint_vel;
+        tx_pdo.vel_ref = (int16_t)(joint_vel/1000);
+        return EC_BOARD_OK;
     }
     virtual int set_torRef ( float joint_tor ) {
-        tx_pdo.tor_ref = joint_tor;
+        tx_pdo.tor_ref = (int16_t)(joint_tor/100);
+        return EC_BOARD_OK;
     }
     virtual int set_ivRef ( float joint_iv ) {
         sdo.iq_ref = joint_iv;
-    // TODO
+        // TODO
     }
 
 #if 0

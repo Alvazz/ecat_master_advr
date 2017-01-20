@@ -151,7 +151,7 @@ public:
 
     void print_info ( void ) {
 
-        DPRINTF ( "\tJoint id %c%d\tJoint robot id %d\n", ( char ) ( sdo.Joint_number>>8 ), sdo.Joint_number&0x0F, sdo.Joint_robot_id );
+        DPRINTF ( "\tJoint id %c%d\tJoint robot id %d\n", ( char ) ( sdo.Joint_number>>8 ), sdo.Joint_number&0xFF, sdo.Joint_robot_id );
         DPRINTF ( "\tmin pos %f\tmax pos %f\n", sdo.Min_pos, sdo.Max_pos );
         DPRINTF ( "\tfw_ver %s\n", std::string((const char *)sdo.firmware_version,8).c_str() );
     }
@@ -323,6 +323,7 @@ public :
      */
     virtual int start ( int controller_type, const std::vector<float> &gains ) {
 
+        std::ostringstream oss;
         float act_position;
         uint16_t fault;
         uint32_t enable_mask = 0x0;
@@ -334,26 +335,56 @@ public :
 
         try {
             set_ctrl_status_X ( this, CTRL_POWER_MOD_OFF );
-            // set PID gains ... this will NOT set tx_pdo.gainP ....
-            writeSDO_byname ( "PosGainP", gains[0] );
-            writeSDO_byname ( "PosGainI", gains[1] );
-            writeSDO_byname ( "PosGainD", gains[2] );
-            // this will SET tx_pdo.gainP
-            gain = ( uint16_t ) gains[0];
-            writeSDO_byname ( "gain_0", gain );
-            gain = ( uint16_t ) gains[2];
-            writeSDO_byname ( "gain_1", gain );
-            // pdo gains will be used in OP
-            //writeSDO_byname ( "board_enable_mask", enable_mask );
+            
+            if ( controller_type == CTRL_SET_POS_MODE ||
+                 controller_type == CTRL_SET_MIX_POS_MODE ) {
+
+                // pdo gains will be used in OP
+                writeSDO_byname ( "PosGainP", gains[0] );
+                writeSDO_byname ( "PosGainI", gains[1] );
+                writeSDO_byname ( "PosGainD", gains[2] );
+                // this will SET tx_pdo.gain_x
+                // pdo gains will be used in OP
+                // pos_Kp
+                gain = (uint16_t)gains[0];
+                writeSDO_byname ( "gain_0", gain );
+                // pos_Kd
+                gain = (uint16_t)gains[2];
+                writeSDO_byname ( "gain_1", gain );
+                
+                
+            } else if ( controller_type == CTRL_SET_IMPED_MODE ) {
+            
+                // pos_Kp
+                gain = (uint16_t)gains[0];
+                writeSDO_byname ( "gain_0", gain );
+                // pos_Kd
+                gain = (uint16_t)gains[1];
+                writeSDO_byname ( "gain_1", gain );
+                // tor_Kp
+                gain = (uint16_t)(gains[2] * 10000);
+                writeSDO_byname ( "gain_2", gain );
+                // tor_Kd
+                gain = (uint16_t)(gains[3] * 10000);
+                writeSDO_byname ( "gain_3", gain );
+                // tor_Ki
+                gain = (uint16_t)(gains[4] * 10000);
+                writeSDO_byname ( "gain_4", gain );
+
+            }
+            
+            // set actual position as reference
+            //readSDO_byname ( "link_pos", act_position );
+            readSDO_byname ( "motor_pos", act_position );
+            writeSDO_byname ( "pos_ref", act_position );
             writeSDO_byname ( "Max_vel", max_vel );
 
-            // set actual position as reference
-            readSDO_byname ( "link_pos", act_position );
-            writeSDO_byname ( "pos_ref", act_position );
             DPRINTF ( "%s\n\tlink_pos %f pos_ref %f\n", __PRETTY_FUNCTION__,
-                      act_position,
+                      act_position, 
                       hipwr_esc::M2J(tx_pdo.pos_ref,_sgn,_offset) );
-            
+            oss << tx_pdo;
+            DPRINTF ( "\ttx_pdo %s\n", oss.str().c_str() );
+
             // set direct mode and power on modulator
             set_ctrl_status_X ( this, CTRL_SET_DIRECT_MODE );
             set_ctrl_status_X ( this, CTRL_POWER_MOD_ON );
@@ -361,12 +392,8 @@ public :
             readSDO_byname ( "fault", fault );
             handle_fault();
 
-            // set position mode
+            // set controller mode
             set_ctrl_status_X ( this, controller_type );
-
-            // enable trajectory_gen
-            //enable_mask = 0x2;
-            //writeSDO_byname("board_enable_mask", enable_mask);
 
         } catch ( EscWrpError &e ) {
 
@@ -404,6 +431,18 @@ public :
                 }
             }
         } 
+        if ( controller_type == CTRL_SET_IMPED_MODE ) {
+            if ( node_cfg["pid"]["impedance"] ) {
+                try {
+                    gains = node_cfg["pid"]["impedance"].as<std::vector<float>>();
+                    assert ( gains.size() == 5 );
+                    DPRINTF ( "using yaml values\n");  
+                } catch ( std::exception &e ) {
+                    DPRINTF ( "Catch Exception in %s ... %s\n", __PRETTY_FUNCTION__, e.what() );
+                    return EC_BOARD_NOK;
+                }
+            }
+        } 
 
         return start ( controller_type, gains );
     }
@@ -428,14 +467,18 @@ public :
 
     /////////////////////////////////////////////
     // set pdo data
+    // TODO check valid range
     virtual int set_posRef ( float joint_pos ) {
         tx_pdo.pos_ref = hipwr_esc::J2M(joint_pos,_sgn,_offset);
+        return EC_BOARD_OK;
     }
     virtual int set_velRef ( float joint_vel ) {
-        tx_pdo.vel_ref = joint_vel;
+        tx_pdo.vel_ref = (int16_t)(joint_vel/1000);
+        return EC_BOARD_OK;
     }
     virtual int set_torRef ( float joint_tor ) {
-        tx_pdo.tor_ref = joint_tor;
+        tx_pdo.tor_ref = (int16_t)(joint_tor/100);
+        return EC_BOARD_OK;
     }
 
 #if 0
