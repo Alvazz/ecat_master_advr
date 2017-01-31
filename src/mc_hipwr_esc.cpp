@@ -31,29 +31,39 @@ static const iit::ecat::objd_t source_SDOs[] = {
     { 0x7000, 11, DTYPE_UNSIGNED16,     16, ATYPE_RW, "op_idx_aux",     0},
     { 0x7000, 12, DTYPE_REAL32,         32, ATYPE_RW, "aux",            0},
     // SD0 0x8000
-    { 0x8000, 0x1, DTYPE_REAL32,        32, ATYPE_RW,    "Sensor_type"              ,0     },
-    { 0x8000, 0x2, DTYPE_REAL32,        32, ATYPE_RW,    "PosGainP"                 ,0     },
-    { 0x8000, 0x3, DTYPE_REAL32,        32, ATYPE_RW,    "PosGainI"                 ,0     },
-    { 0x8000, 0x4, DTYPE_REAL32,        32, ATYPE_RW,    "PosGainD"                 ,0     },
-    { 0x8000, 0x5, DTYPE_REAL32,        32, ATYPE_RW,    "TorGainP"                 ,0     },
-    { 0x8000, 0x6, DTYPE_REAL32,        32, ATYPE_RW,    "TorGainI"                 ,0     },
-    { 0x8000, 0x7, DTYPE_REAL32,        32, ATYPE_RW,    "TorGainD"                 ,0     },
-    { 0x8000, 0x8, DTYPE_REAL32,        32, ATYPE_RW,    "TorGainFF"                ,0     },
-    { 0x8000, 0x9, DTYPE_REAL32,        32, ATYPE_RW,    "Pos_I_lim"                ,0     },
-    { 0x8000, 0xa, DTYPE_REAL32,        32, ATYPE_RW,    "Tor_I_lim"                ,0     },
-    { 0x8000, 0xb, DTYPE_REAL32,        32, ATYPE_RW,    "Min_pos"                  ,0     },
-    { 0x8000, 0xc, DTYPE_REAL32,        32, ATYPE_RW,    "Max_pos"                  ,0     },
-    { 0x8000, 0xd, DTYPE_REAL32,        32, ATYPE_RW,    "Max_vel"                  ,0     },
-    { 0x8000, 0xe, DTYPE_REAL32,        32, ATYPE_RW,    "Max_tor"                  ,0     },
-    { 0x8000, 0xf, DTYPE_REAL32,        32, ATYPE_RW,    "Max_cur"                  ,0     },
-    { 0x8000, 0x10, DTYPE_REAL32,       32, ATYPE_RW,    "Enc_offset"               ,0     },
-    { 0x8000, 0x11, DTYPE_REAL32,       32, ATYPE_RO,    "Enc_relative_offset"      ,0     },
-    { 0x8000, 0x12, DTYPE_REAL32,       32, ATYPE_RW,    "Calibration_angle"        ,0     },
-    { 0x8000, 0x13,DTYPE_REAL32,        32, ATYPE_RW,    "Torque_lin_coeff"         ,0     },
-    { 0x8000, 0x14,DTYPE_UNSIGNED64,    64, ATYPE_RW,    "Enc_mot_nonius_calib"     ,0     },
-    { 0x8000, 0x15,DTYPE_UNSIGNED64,    64, ATYPE_RW,    "Enc_load_nonius_calib"    ,0     },
-    { 0x8000, 0x16,DTYPE_INTEGER16,     16, ATYPE_RW,    "Joint_number"             ,0     },
-    { 0x8000, 0x17,DTYPE_INTEGER16,     16, ATYPE_RW,    "Joint_robot_id"           ,0     },
+    { 0x8000, 0x1, DTYPE_REAL32,        32, ATYPE_RW,    "Sensor_type"              ,0  },
+    { 0x8000, 0x2, DTYPE_REAL32,        32, ATYPE_RW,    "PosGainP"                 ,0  },
+    { 0x8000, 0x3, DTYPE_REAL32,        32, ATYPE_RW,    "PosGainI"                 ,0  },
+    { 0x8000, 0x4, DTYPE_REAL32,        32, ATYPE_RW,    "PosGainD"                 ,0  },
+    { 0x8000, 0x5, DTYPE_REAL32,        32, ATYPE_RW,    "TorGainP"                 ,0  },
+    { 0x8000, 0x6, DTYPE_REAL32,        32, ATYPE_RW,    "TorGainI"                 ,0  },
+    { 0x8000, 0x7, DTYPE_REAL32,        32, ATYPE_RW,    "TorGainD"                 ,0  },
+    { 0x8000, 0x8, DTYPE_REAL32,        32, ATYPE_RW,    "TorGainFF"                ,0  },
+    { 0x8000, 0x9, DTYPE_REAL32,        32, ATYPE_RW,    "Pos_I_lim"                ,0  },
+    { 0x8000, 0xa, DTYPE_REAL32,        32, ATYPE_RW,    "Tor_I_lim"                ,0  },
+    { 0x8000, 0xb, DTYPE_REAL32,        32, ATYPE_RW,    "Min_pos"                  ,0  },
+    { 0x8000, 0xc, DTYPE_REAL32,        32, ATYPE_RW,    "Max_pos"                  ,0  },
+    { 0x8000, 0xd, DTYPE_REAL32,        32, ATYPE_RW,    "Max_vel"                  ,0  },
+    { 0x8000, 0xe, DTYPE_REAL32,        32, ATYPE_RW,    "Max_tor"                  ,0  },
+    { 0x8000, 0xf, DTYPE_REAL32,        32, ATYPE_RW,    "Max_cur"                  ,0  },
+    { 0x8000, 0x10, DTYPE_REAL32,       32, ATYPE_RW,    "Enc_offset"               ,0  },
+    { 0x8000, 0x11, DTYPE_REAL32,       32, ATYPE_RO,    "Enc_relative_offset"      ,0  },
+    { 0x8000, 0x12, DTYPE_REAL32,       32, ATYPE_RW,    "Calibration_angle"        ,0  },
+    { 0x8000, 0x13,DTYPE_REAL32,        32, ATYPE_RW,    "Torque_lin_coeff"         ,0  },
+    { 0x8000, 0x14,DTYPE_UNSIGNED64,    64, ATYPE_RW,    "Enc_mot_nonius_calib"     ,0  },
+    { 0x8000, 0x15,DTYPE_UNSIGNED64,    64, ATYPE_RW,    "Enc_load_nonius_calib"    ,0  },
+    { 0x8000, 0x16,DTYPE_INTEGER16,     16, ATYPE_RW,    "Joint_number"             ,0  },
+    { 0x8000, 0x17,DTYPE_INTEGER16,     16, ATYPE_RW,    "Joint_robot_id"           ,0  },
+    { 0x8000, 0x18, DTYPE_REAL32,       32, ATYPE_RW,    "Motor_Inertia"            ,0  },
+    { 0x8000, 0x19, DTYPE_REAL32,       32, ATYPE_RW,    "Inv_Motor_Inertia"        ,0  },
+    { 0x8000, 0x1a, DTYPE_REAL32,       32, ATYPE_RW,    "Observer_Cut_Off"         ,0  },
+    { 0x8000, 0x1b, DTYPE_REAL32,       32, ATYPE_RW,    "Inv_Geared_Torque_Constant",0 },
+    { 0x8000, 0x1c, DTYPE_REAL32,       32, ATYPE_RW,    "Geared_Torque_Constant"   ,0  },
+    { 0x8000, 0x1d, DTYPE_REAL32,       32, ATYPE_RW,    "Winding_Resistance"       ,0  },
+    { 0x8000, 0x1e, DTYPE_REAL32,       32, ATYPE_RW,    "Voltage_Feedforward"      ,0  },
+    { 0x8000, 0x1f, DTYPE_REAL32,       32, ATYPE_RW,    "BackEmf_Compensation"     ,0  },
+    { 0x8000, 0x20, DTYPE_INTEGER16,    16, ATYPE_RW,    "Has_Deflection_Encoder"   ,0  },
+    { 0x8000, 0x21, DTYPE_INTEGER16,    16, ATYPE_RW,    "Analog_motor"             ,0  },
 
     // SD0 0x8001
     { 0x8001, 0x1, DTYPE_VISIBLE_STRING,64, ATYPE_RO,    "firmware_version"  	    ,0     },
@@ -138,6 +148,17 @@ void HpESC::init_SDOs ( void ) {
     SDOs[i++].data = ( void* ) &HpESC::sdo.Enc_load_nonius_calib;
     SDOs[i++].data = ( void* ) &HpESC::sdo.Joint_number;
     SDOs[i++].data = ( void* ) &HpESC::sdo.Joint_robot_id;
+    SDOs[i++].data = ( void* ) &HpESC::sdo.MotorInertia;
+    SDOs[i++].data = ( void* ) &HpESC::sdo.InvMotorInertia;
+    SDOs[i++].data = ( void* ) &HpESC::sdo.ObserverCutOff;
+    SDOs[i++].data = ( void* ) &HpESC::sdo.InvGearedTorqueConstant;
+    SDOs[i++].data = ( void* ) &HpESC::sdo.GearedTorqueConstant;
+    SDOs[i++].data = ( void* ) &HpESC::sdo.WindingResistance;
+    SDOs[i++].data = ( void* ) &HpESC::sdo.VoltageFeedforward;
+    SDOs[i++].data = ( void* ) &HpESC::sdo.BackEmfCompensation;
+    SDOs[i++].data = ( void* ) &HpESC::sdo.HasDeflectionEncoder;
+    SDOs[i++].data = ( void* ) &HpESC::sdo.Analog_motor;
+    
     // 0x8001
     SDOs[i++].data = ( void* ) &HpESC::sdo.firmware_version;
     SDOs[i++].data = ( void* ) &HpESC::sdo.board_enable_mask;
@@ -150,11 +171,18 @@ void HpESC::init_SDOs ( void ) {
     SDOs[i++].data = ( void* ) &HpESC::sdo.flash_params_cmd;
     SDOs[i++].data = ( void* ) &HpESC::sdo.flash_params_cmd_ack;
     SDOs[i++].data = ( void* ) &HpESC::sdo.abs_enc_mot;
-    SDOs[i++].data = ( void* ) &HpESC::sdo.abs_enc_load;
+    SDOs[i++].data = ( void* ) &HpESC::sdo.abs_enc_2;
     SDOs[i++].data = ( void* ) &HpESC::sdo.angle_enc_mot;
-    SDOs[i++].data = ( void* ) &HpESC::sdo.angle_enc_load;
-    SDOs[i++].data = ( void* ) &HpESC::sdo.angle_enc_diff;
-    SDOs[i++].data = ( void* ) &HpESC::sdo.iq_ref;
+    SDOs[i++].data = ( void* ) &HpESC::sdo.angle_enc_link;
+    SDOs[i++].data = ( void* ) &HpESC::sdo.angle_enc_deflection;
+    SDOs[i++].data = ( void* ) &HpESC::sdo.motor_ref;
+    
+    // 0x8002
+    SDOs[i++].data = ( void* ) &HpESC::sdo.pos_ref_fb;
+    SDOs[i++].data = ( void* ) &HpESC::sdo.motor_ref_fb;
+    SDOs[i++].data = ( void* ) &HpESC::sdo.motor_out_fb;
+    SDOs[i++].data = ( void* ) &HpESC::sdo.torque_ref_fb;
+    
     // end marker
     SDOs[i++].data = 0;
 

@@ -23,6 +23,7 @@
 #include <iit/ecat/utils.h>
 #include <map>
 
+
 namespace iit {
 namespace ecat {
 namespace advr {
@@ -38,18 +39,19 @@ static float M2J ( float p, int s, float o ) {
 //static float M2J(float p, int s, float o) { return p; }
 }
 
-
 struct HiPwrEscSdoTypes {
 
+    ////////////////////////////
     // flash
-
     unsigned long Sensor_type;      // Sensor type: NOT USED
 
+    float PosGainP;
+    float PosGainI;
+    float PosGainD;
     float TorGainP;
     float TorGainI;
     float TorGainD;
     float TorGainFF;
-
     float Pos_I_lim;                // Integral limit: NOT USED
     float Tor_I_lim;                // Integral limit: NOT USED
 
@@ -70,11 +72,20 @@ struct HiPwrEscSdoTypes {
     int16_t     Joint_number;
     int16_t     Joint_robot_id;
 
-    float PosGainP;
-    float PosGainI;
-    float PosGainD;
+    // parameters added 
+    float MotorInertia;
+    float InvMotorInertia;
+    float ObserverCutOff;
+    float InvGearedTorqueConstant;
+    float GearedTorqueConstant;
+    float WindingResistance;
+    float VoltageFeedforward;
+    float BackEmfCompensation;
+    float HasDeflectionEncoder;
+    float Analog_motor;
+    
+    ////////////////////////////
     // ram
-
     char        firmware_version[8];
     uint32_t    board_enable_mask;
     float       Direct_ref;
@@ -85,13 +96,17 @@ struct HiPwrEscSdoTypes {
     uint16_t    ctrl_status_cmd_ack;
     uint16_t    flash_params_cmd;
     uint16_t    flash_params_cmd_ack;
-    int32_t    abs_enc_mot;
-    int32_t    abs_enc_load;
+    int32_t     abs_enc_mot;
+    int32_t     abs_enc_2;
     float       angle_enc_mot;  
-    float       angle_enc_load;
-    float       angle_enc_diff;
-    float       iq_ref;
-
+    float       angle_enc_link;
+    float       angle_enc_deflection;
+    float       motor_ref;
+    // aux
+    float       pos_ref_fb;
+    float       motor_ref_fb;
+    float       motor_out_fb;
+    float       torque_ref_fb;
 };
 
 
@@ -231,6 +246,16 @@ protected :
         return EC_BOARD_OK;
     }
 
+    virtual const pdo_rx_t& getRxPDO() const        {
+        return Base::getRxPDO();
+    }
+    virtual const pdo_tx_t& getTxPDO() const        {
+        return Base::getTxPDO();
+    }
+    virtual void setTxPDO ( const pdo_tx_t & pdo_tx )  {
+        Base::setTxPDO ( pdo_tx );
+    }
+
 
 public :
     ///////////////////////////////////////////////////////
@@ -242,16 +267,6 @@ public :
         if ( product_code == HI_PWR_AC_MC ) return HI_PWR_AC_MC;
         if ( product_code == HI_PWR_DC_MC ) return HI_PWR_DC_MC;
         return NO_TYPE;
-    }
-
-    virtual const pdo_rx_t& getRxPDO() const        {
-        return Base::getRxPDO();
-    }
-    virtual const pdo_tx_t& getTxPDO() const        {
-        return Base::getTxPDO();
-    }
-    virtual void setTxPDO ( const pdo_tx_t & pdo_tx )  {
-        Base::setTxPDO ( pdo_tx );
     }
 
     virtual int init ( const YAML::Node & root_cfg ) {
@@ -566,7 +581,30 @@ public :
 
 private:
 
-    int read_conf ( std::string conf_key, const YAML::Node & root_cfg ) {
+    /*
+     * set node_cfg member and read from it
+     */ 
+    int read_conf ( std::string conf_key, const YAML::Node & root_cfg );
+    
+    int16_t Joint_robot_id;
+
+    YAML::Node node_cfg;
+
+    float   _offset;
+    int     _sgn;
+
+    stat_t  s_rtt;
+
+    objd_t * SDOs;
+
+};
+
+///////////////////////////////////////////////////////////////////////////////
+//
+///////////////////////////////////////////////////////////////////////////////
+
+
+inline int HpESC::read_conf ( std::string conf_key, const YAML::Node & root_cfg ) {
 
         if ( ! root_cfg[conf_key] ) {
             return EC_BOARD_KEY_NOT_FOUND;
@@ -580,21 +618,40 @@ private:
         _offset = node_cfg["pos_offset"].as<float>();
         _offset = DEG2RAD ( _offset );
 
+#if 1        
+        if ( node_cfg["gear_ratio"] ) {
+            std::vector<std::string> upg_par_names = std::initializer_list<std::string> {
+                "MotorInertia", "InvMotorInertia", "ObserverCutOff",
+                "InvGearedTorqueConstant", "GearedTorqueConstant",
+                "WindingResistance", "VoltageFeedforward", "BackEmfCompensation"
+            };
+            for ( auto const par_name : upg_par_names ) {
+                float upgPar;
+                const YAML::Node & gr_cfg = root_cfg[node_cfg["gear_ratio"].as<std::string>()];
+                upgPar = gr_cfg[par_name].as<float>();
+                writeSDO_byname ( par_name.c_str(), upgPar );
+                DPRINTF("writeSDO_byname ( %s, %f )\n", par_name.c_str(), upgPar);
+            }
+        }
+        
+        int16_t tmp_par;
+        if ( get_ESC_type() == HI_PWR_AC_MC ) { tmp_par = 1; }
+        else { tmp_par = 0; }
+        writeSDO_byname ( "Analog_motor", tmp_par );
+        
+        std::vector<int> upg_rids = std::initializer_list<int> {
+            33,41,42,43,44,45,46,51,52,53,54,55,56
+        };
+        auto found = std::find(std::begin(upg_rids), std::end(upg_rids), Joint_robot_id);
+        if ( found != std::end(upg_rids) ) { tmp_par = 1; }
+        else { tmp_par = 0; }
+        writeSDO_byname ( "HasDeflectionEncoder", tmp_par );
+        
+        set_flash_cmd_X ( this, FLASH_SAVE );
+
+#endif        
         return EC_WRP_OK;
     }
-
-    int16_t Joint_robot_id;
-
-    YAML::Node node_cfg;
-
-    float   _offset;
-    int     _sgn;
-
-    stat_t  s_rtt;
-
-    objd_t * SDOs;
-
-};
 
 
 
