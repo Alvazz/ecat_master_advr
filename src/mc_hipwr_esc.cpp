@@ -83,6 +83,12 @@ static const iit::ecat::objd_t source_SDOs[] = {
     { 0x8001, 0xf, DTYPE_REAL32,        32, ATYPE_RO, 	 "angle_enc_diff" 		    ,0     },
     { 0x8001, 0x10,DTYPE_REAL32,        32, ATYPE_RO,	 "iq_ref" 		            ,0     },
 
+    // SD0 0x8002
+    { 0x8002, 0x1, DTYPE_REAL32,        32, ATYPE_RW,    "pos_ref_fb"           ,0     },
+    { 0x8002, 0x2, DTYPE_REAL32,        32, ATYPE_RW,    "moror_ref_fb"         ,0     },
+    { 0x8002, 0x3, DTYPE_REAL32,        32, ATYPE_RW,    "moror_out_fb"         ,0     },
+    { 0x8002, 0x4, DTYPE_REAL32,        32, ATYPE_RW,    "torque_ref_fb"        ,0     },
+
     {0, 0, 0, 0, 0, 0, 0 }
 
 

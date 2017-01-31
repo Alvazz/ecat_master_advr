@@ -621,9 +621,9 @@ inline int HpESC::read_conf ( std::string conf_key, const YAML::Node & root_cfg 
 #if 1        
         if ( node_cfg["gear_ratio"] ) {
             std::vector<std::string> upg_par_names = std::initializer_list<std::string> {
-                "MotorInertia", "InvMotorInertia", "ObserverCutOff",
-                "InvGearedTorqueConstant", "GearedTorqueConstant",
-                "WindingResistance", "VoltageFeedforward", "BackEmfCompensation"
+                "Motor_Inertia", "Inv_Motor_Inertia", "Observer_Cut_Off",
+                "Inv_Geared_Torque_Constant", "Geared_Torque_Constant",
+                "Winding_Resistance", "Voltage_Feedforward", "BackEmf_Compensation"
             };
             for ( auto const par_name : upg_par_names ) {
                 float upgPar;
@@ -638,6 +638,7 @@ inline int HpESC::read_conf ( std::string conf_key, const YAML::Node & root_cfg 
         if ( get_ESC_type() == HI_PWR_AC_MC ) { tmp_par = 1; }
         else { tmp_par = 0; }
         writeSDO_byname ( "Analog_motor", tmp_par );
+        DPRINTF("writeSDO_byname ( %s, %d )\n", "Analog_motor", tmp_par);
         
         std::vector<int> upg_rids = std::initializer_list<int> {
             33,41,42,43,44,45,46,51,52,53,54,55,56
@@ -645,7 +646,8 @@ inline int HpESC::read_conf ( std::string conf_key, const YAML::Node & root_cfg 
         auto found = std::find(std::begin(upg_rids), std::end(upg_rids), Joint_robot_id);
         if ( found != std::end(upg_rids) ) { tmp_par = 1; }
         else { tmp_par = 0; }
-        writeSDO_byname ( "HasDeflectionEncoder", tmp_par );
+        writeSDO_byname ( "Has_Deflection_Encoder", tmp_par );
+        DPRINTF("writeSDO_byname ( %s, %d )\n", "Has_Deflection_Encoder", tmp_par);
         
         set_flash_cmd_X ( this, FLASH_SAVE );
 
