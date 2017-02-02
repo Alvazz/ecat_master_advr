@@ -36,8 +36,8 @@ static float M2J(float p, int s, float o) { return ((p + (s*o))/s); }
 
 struct LoPwrEscSdoTypes {
 
+    ///////////////////////////
     // flash
-
     int     Block_control;
     int     nonius_offset_low;
     float   PosGainP;
@@ -73,8 +73,19 @@ struct LoPwrEscSdoTypes {
     int16_t Joint_number;
     int16_t Joint_robot_id;
     float   Target_velocity;
+    
+    float MotorInertia;
+    float InvMotorInertia;
+    float ObserverCutOff;
+    float InvGearedTorqueConstant;
+    float GearedTorqueConstant;
+    float WindingResistance;
+    float VoltageFeedforward;
+    float BackEmfCompensation;
+    float Torque_lin_coeff;
+    
+    ///////////////////////////
     // ram
-
     char        firmware_version[8];
     uint16_t    enable_pdo_gains;
     uint16_t    set_ctrl_status;
@@ -500,23 +511,8 @@ public:
 
 private:
 
-    int read_conf ( std::string conf_key, const YAML::Node & root_cfg ) {
-
-        if ( ! root_cfg[conf_key] ) {
-            return EC_BOARD_KEY_NOT_FOUND;
-        }
-
-        DPRINTF ( "Using config %s\n", conf_key.c_str() );
-        
-        node_cfg = root_cfg[conf_key];
-        
-        _sgn = node_cfg["sign"].as<int>();
-        _offset = node_cfg["pos_offset"].as<float>();
-        _offset = DEG2RAD ( _offset );
-
-        return EC_WRP_OK;
-    }
-
+    int read_conf ( std::string conf_key, const YAML::Node & root_cfg );
+    
     int16_t Joint_robot_id;
 
     YAML::Node node_cfg;
@@ -530,7 +526,61 @@ private:
 
 };
 
+///////////////////////////////////////////////////////////////////////////////
+//
+///////////////////////////////////////////////////////////////////////////////
 
+
+inline int LpESC::read_conf ( std::string conf_key, const YAML::Node & root_cfg ) {
+ 
+    if ( ! root_cfg[conf_key] ) {
+        return EC_BOARD_KEY_NOT_FOUND;
+    }
+
+    DPRINTF ( "Using config %s\n", conf_key.c_str() );
+    
+    node_cfg = root_cfg[conf_key];
+    
+    _sgn = node_cfg["sign"].as<int>();
+    _offset = node_cfg["pos_offset"].as<float>();
+    _offset = DEG2RAD ( _offset );
+
+#if 0        
+    if ( node_cfg["gear_ratio"] ) {
+        std::vector<std::string> upg_par_names = std::initializer_list<std::string> {
+            "Motor_Inertia", "Inv_Motor_Inertia", "Observer_Cut_Off",
+            "Inv_Geared_Torque_Constant", "Geared_Torque_Constant",
+            "Winding_Resistance", "Voltage_Feedforward", "BackEmf_Compensation"
+        };
+        for ( auto const par_name : upg_par_names ) {
+            float upgPar;
+            const YAML::Node & gr_cfg = root_cfg[node_cfg["gear_ratio"].as<std::string>()];
+            upgPar = gr_cfg[par_name].as<float>();
+            writeSDO_byname ( par_name.c_str(), upgPar );
+            DPRINTF("writeSDO_byname ( %s, %f )\n", par_name.c_str(), upgPar);
+        }
+    }
+    
+    set_flash_cmd_X ( this, FLASH_SAVE );
+
+#else        
+    std::vector<std::string> upg_par_names = std::initializer_list<std::string> {
+        "Torque_lin_coeff",
+        "Motor_Inertia", "Inv_Motor_Inertia", "Observer_Cut_Off",
+        "Inv_Geared_Torque_Constant", "Geared_Torque_Constant",
+        "Winding_Resistance", "Voltage_Feedforward", "BackEmf_Compensation"
+    };
+    float f_par;
+    for ( auto const par_name : upg_par_names ) {
+        readSDO_byname ( par_name.c_str(), f_par );
+        DPRINTF("readSDO_byname ( %s, %f )\n", par_name.c_str(), f_par);
+    }
+
+#endif        
+   
+    return EC_WRP_OK;
+
+}
 
 }
 }

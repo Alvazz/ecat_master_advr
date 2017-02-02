@@ -176,6 +176,17 @@ static const iit::ecat::objd_t source_SDOs[] = {
     {0x8000, 0x21, DTYPE_INTEGER16,    16, ATYPE_RW, acName8000_33        ,0   },
     {0x8000, 0x22, DTYPE_INTEGER16,    16, ATYPE_RW, acName8000_34        ,0   },
     {0x8000, 0x23, DTYPE_REAL32,       32, ATYPE_RW, acName8000_35        ,0   },
+    
+    { 0x8000, 0x24, DTYPE_REAL32,       32, ATYPE_RW,    "Motor_Inertia"            ,0  },
+    { 0x8000, 0x25, DTYPE_REAL32,       32, ATYPE_RW,    "Inv_Motor_Inertia"        ,0  },
+    { 0x8000, 0x26, DTYPE_REAL32,       32, ATYPE_RW,    "Observer_Cut_Off"         ,0  },
+    { 0x8000, 0x27, DTYPE_REAL32,       32, ATYPE_RW,    "Inv_Geared_Torque_Constant",0 },
+    { 0x8000, 0x28, DTYPE_REAL32,       32, ATYPE_RW,    "Geared_Torque_Constant"   ,0  },
+    { 0x8000, 0x29, DTYPE_REAL32,       32, ATYPE_RW,    "Winding_Resistance"       ,0  },
+    { 0x8000, 0x2a, DTYPE_REAL32,       32, ATYPE_RW,    "Voltage_Feedforward"      ,0  },
+    { 0x8000, 0x2b, DTYPE_REAL32,       32, ATYPE_RW,    "BackEmf_Compensation"     ,0  },
+    { 0x8000, 0x2c, DTYPE_REAL32,       32, ATYPE_RW,    "Torque_lin_coeff"         ,0  },
+    
     // SDO 0x8001
     {0x8001, 0x1, DTYPE_VISIBLE_STRING,   64, ATYPE_RO, "fw_ver"                ,0   },
     {0x8001, 0x2, DTYPE_UNSIGNED32,       32, ATYPE_RW, acName8001_2            ,0   },
@@ -265,6 +276,15 @@ void LpESC::init_SDOs ( void ) {
     SDOs[i++].data = ( void* ) &LpESC::sdo.Joint_number;
     SDOs[i++].data = ( void* ) &LpESC::sdo.Joint_robot_id;
     SDOs[i++].data = ( void* ) &LpESC::sdo.Target_velocity;
+    SDOs[i++].data = ( void* ) &LpESC::sdo.MotorInertia;
+    SDOs[i++].data = ( void* ) &LpESC::sdo.InvMotorInertia;
+    SDOs[i++].data = ( void* ) &LpESC::sdo.ObserverCutOff;
+    SDOs[i++].data = ( void* ) &LpESC::sdo.InvGearedTorqueConstant;
+    SDOs[i++].data = ( void* ) &LpESC::sdo.GearedTorqueConstant;
+    SDOs[i++].data = ( void* ) &LpESC::sdo.WindingResistance;
+    SDOs[i++].data = ( void* ) &LpESC::sdo.VoltageFeedforward;
+    SDOs[i++].data = ( void* ) &LpESC::sdo.BackEmfCompensation;
+    SDOs[i++].data = ( void* ) &LpESC::sdo.Torque_lin_coeff;
     
     // 0x8001
     SDOs[i++].data = ( void* ) &LpESC::sdo.firmware_version;
