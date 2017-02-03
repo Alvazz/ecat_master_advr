@@ -429,7 +429,7 @@ public:
         }
         // check idx
         if ( (rx_pdo.op_idx_ack & 0xFF) != sdo_objd->subindex ) {
-            DPRINTF("[%ld\t%d] Fail PDO_aux idx %d != %d\n", get_time_ns()-prev_err_ts, rx_pdo.rtt, sdo_objd->subindex, rx_pdo.op_idx_ack & 0xFF );
+            DPRINTF("[dt err %ld\trtt %d] Fail PDO_aux idx %d != %d\n", get_time_ns()-prev_err_ts, rx_pdo.rtt, sdo_objd->subindex, rx_pdo.op_idx_ack & 0xFF );
             prev_err_ts = get_time_ns();
             return -1;
         }

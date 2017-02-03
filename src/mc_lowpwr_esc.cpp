@@ -185,7 +185,6 @@ static const iit::ecat::objd_t source_SDOs[] = {
     { 0x8000, 0x29, DTYPE_REAL32,       32, ATYPE_RW,    "Winding_Resistance"       ,0  },
     { 0x8000, 0x2a, DTYPE_REAL32,       32, ATYPE_RW,    "Voltage_Feedforward"      ,0  },
     { 0x8000, 0x2b, DTYPE_REAL32,       32, ATYPE_RW,    "BackEmf_Compensation"     ,0  },
-    { 0x8000, 0x2c, DTYPE_REAL32,       32, ATYPE_RW,    "Torque_lin_coeff"         ,0  },
     
     // SDO 0x8001
     {0x8001, 0x1, DTYPE_VISIBLE_STRING,   64, ATYPE_RO, "fw_ver"                ,0   },
@@ -284,7 +283,6 @@ void LpESC::init_SDOs ( void ) {
     SDOs[i++].data = ( void* ) &LpESC::sdo.WindingResistance;
     SDOs[i++].data = ( void* ) &LpESC::sdo.VoltageFeedforward;
     SDOs[i++].data = ( void* ) &LpESC::sdo.BackEmfCompensation;
-    SDOs[i++].data = ( void* ) &LpESC::sdo.Torque_lin_coeff;
     
     // 0x8001
     SDOs[i++].data = ( void* ) &LpESC::sdo.firmware_version;

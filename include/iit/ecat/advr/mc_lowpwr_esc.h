@@ -82,7 +82,6 @@ struct LoPwrEscSdoTypes {
     float WindingResistance;
     float VoltageFeedforward;
     float BackEmfCompensation;
-    float Torque_lin_coeff;
     
     ///////////////////////////
     // ram
@@ -565,7 +564,6 @@ inline int LpESC::read_conf ( std::string conf_key, const YAML::Node & root_cfg 
 
 #else        
     std::vector<std::string> upg_par_names = std::initializer_list<std::string> {
-        "Torque_lin_coeff",
         "Motor_Inertia", "Inv_Motor_Inertia", "Observer_Cut_Off",
         "Inv_Geared_Torque_Constant", "Geared_Torque_Constant",
         "Winding_Resistance", "Voltage_Feedforward", "BackEmf_Compensation"
@@ -585,5 +583,5 @@ inline int LpESC::read_conf ( std::string conf_key, const YAML::Node & root_cfg 
 }
 }
 }
-#endif /* IIT_ECAT_ADVR_ESC_H_ */
+#endif /* __IIT_ECAT_ADVR_MC_LOWPWR_ESC_H__ */
 // kate: indent-mode cstyle; indent-width 4; replace-tabs on; 

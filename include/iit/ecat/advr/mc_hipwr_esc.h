@@ -490,11 +490,11 @@ public :
         return EC_BOARD_OK;
     }
     virtual int set_velRef ( float joint_vel ) {
-        tx_pdo.vel_ref = (int16_t)(joint_vel/1000);
+        tx_pdo.vel_ref = (int16_t)(joint_vel*1000);
         return EC_BOARD_OK;
     }
     virtual int set_torRef ( float joint_tor ) {
-        tx_pdo.tor_ref = (int16_t)(joint_tor/100);
+        tx_pdo.tor_ref = (int16_t)(joint_tor*100);
         return EC_BOARD_OK;
     }
 
@@ -680,5 +680,5 @@ inline int HpESC::read_conf ( std::string conf_key, const YAML::Node & root_cfg 
 }
 }
 }
-#endif /* IIT_ECAT_ADVR_ESC_H_ */
+#endif /* __IIT_ECAT_ADVR_MC_HIPWR_ESC_H__ */
 // kate: indent-mode cstyle; indent-width 4; replace-tabs on; 
