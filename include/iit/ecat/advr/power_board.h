@@ -100,6 +100,7 @@ struct PowEscPdoTypes {
             pb_rx_pdo.mutable_powwalkman_rx_pdo()->set_batt_temp(battery_temp);
             pb_rx_pdo.mutable_powwalkman_rx_pdo()->set_batt_volt(battery_volt);
             pb_rx_pdo.mutable_powwalkman_rx_pdo()->set_batt_curr(battery_curr);
+            pb_rx_pdo.mutable_powwalkman_rx_pdo()->set_load_curr(load_curr);
             pb_rx_pdo.mutable_powwalkman_rx_pdo()->set_fault(fault);
             pb_rx_pdo.mutable_powwalkman_rx_pdo()->set_rtt(rtt);
             pb_rx_pdo.SerializeToString(pb_str);
