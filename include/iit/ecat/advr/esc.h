@@ -75,6 +75,7 @@ enum Board_type : uint16_t {
     FOOT_SENSOR     = 0x21,
     POW_BOARD       = 0x30,
     POW_CMN_BOARD   = 0x31,
+    IMU_VECTORNAV   = 0x40,
     HUB             = 0x100,
     HUB_IO          = 0x101,
     EC_TEST         = 1234,
@@ -429,7 +430,7 @@ public:
         }
         // check idx
         if ( (rx_pdo.op_idx_ack & 0xFF) != sdo_objd->subindex ) {
-            DPRINTF("[dt err %ld\trtt %d] Fail PDO_aux idx %d != %d\n", get_time_ns()-prev_err_ts, rx_pdo.rtt, sdo_objd->subindex, rx_pdo.op_idx_ack & 0xFF );
+            //DPRINTF("[dt err %ld\trtt %d] Fail PDO_aux idx %d != %d\n", get_time_ns()-prev_err_ts, rx_pdo.rtt, sdo_objd->subindex, rx_pdo.op_idx_ack & 0xFF );
             prev_err_ts = get_time_ns();
             return -1;
         }

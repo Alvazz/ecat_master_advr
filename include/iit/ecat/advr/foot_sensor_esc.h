@@ -97,20 +97,8 @@ struct FootSensorEscSdoTypes {
 
     unsigned long Block_control;
     long NumAvSamples;
-
-    unsigned long calibration_offset0;
-    unsigned long calibration_offset1;
-    unsigned long calibration_offset2;
-    unsigned long calibration_offset3;
-    unsigned long calibration_offset4;
-    unsigned long calibration_offset5;
-
-    float matrix_r1_c1;
-    float matrix_r1_c2;
-    float matrix_r1_c3;
-    float matrix_r1_c4;
-    float matrix_r1_c5;
-    float matrix_r1_c6;
+    
+    int16_t ConfigFlags;
 
     int16_t sensor_number;
     int16_t sensor_robot_id;
@@ -119,12 +107,6 @@ struct FootSensorEscSdoTypes {
 
     char        firmware_version[8];
     uint16_t    ack_board_fault;
-    float       matrix_rn_c1;
-    float       matrix_rn_c2;
-    float       matrix_rn_c3;
-    float       matrix_rn_c4;
-    float       matrix_rn_c5;
-    float       matrix_rn_c6;
     uint16_t    flash_params_cmd;
     uint16_t    flash_params_cmd_ack;
 };
@@ -214,7 +196,7 @@ public:
             init_SDOs();
             init_sdo_lookup();
             readSDO_byname ( "Sensor_robot_id", robot_id );
-            set_flash_cmd_X ( this, CTRL_REMOVE_TORQUE_OFFS );
+//             set_flash_cmd_X ( this, CTRL_REMOVE_TORQUE_OFFS );
 
         } catch ( EscWrpError &e ) {
 
@@ -268,31 +250,6 @@ private:
 
 typedef std::map<int, FootSensorESC*>  FootSensorSlavesMap;
 
-inline int FootSensorESC::set_cal_matrix ( std::vector<std::vector<float>> &cal_matrix ) {
-    int     res = 0;
-    int16_t ack;
-    int16_t flash_row_cmd = 0x00C7;
-
-    for ( int r=0; r<6; r++ ) {
-
-        // set row n param value
-        writeSDO_byname ( "matrix_rn_c1",cal_matrix[r][0] );
-        writeSDO_byname ( "matrix_rn_c2",cal_matrix[r][1] );
-        writeSDO_byname ( "matrix_rn_c3",cal_matrix[r][2] );
-        writeSDO_byname ( "matrix_rn_c4",cal_matrix[r][3] );
-        writeSDO_byname ( "matrix_rn_c5",cal_matrix[r][4] );
-        writeSDO_byname ( "matrix_rn_c6",cal_matrix[r][5] );
-
-        if ( set_flash_cmd_X ( this, flash_row_cmd ) != EC_BOARD_OK ) {
-            return EC_BOARD_FT6_CALIB_FAIL;
-        }
-        // next row cmd
-        flash_row_cmd++;
-
-    } // for rows
-
-    return EC_BOARD_OK;
-}
 
 
 

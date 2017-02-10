@@ -20,6 +20,7 @@ endforeach()
 
 set(msgs
   dummy.proto
+  imu_pdo.proto
   motor_pdo.proto
   ft6_pdo.proto
   power_pack_pdo.proto
