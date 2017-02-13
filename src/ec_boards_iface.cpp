@@ -11,7 +11,7 @@ using namespace iit::ecat::advr;
 
 Ec_Boards_ctrl::Ec_Boards_ctrl ( std::string config_file ) {
 
-#ifdef __XENO__
+#ifdef __COBALT__
     rd_mtx = PTHREAD_MUTEX_INITIALIZER;
     wr_mtx = PTHREAD_MUTEX_INITIALIZER;
 #endif
@@ -177,6 +177,8 @@ void Ec_Boards_ctrl::factory_board ( void ) {
 
 int Ec_Boards_ctrl::configure_boards ( void ) {
 
+    factory_board();
+    
     return slaves.size();
 
 }

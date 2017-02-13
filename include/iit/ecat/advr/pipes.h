@@ -7,18 +7,18 @@
 #ifndef __IIT_ECAT_ADVR_PIPE_H__
 #define __IIT_ECAT_ADVR_PIPE_H__
 
-#include <string>
+#include <cstring>
 
-#ifdef __XENO__
-#include <iit/advr/rt_ipc.h>
+#ifdef __COBALT__
+    #include <iit/ecat/advr/rt_ipc.h>
 #else
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
+    #include <sys/types.h>
+    #include <sys/stat.h>
+    #include <fcntl.h>
 #endif
 
 
-#ifdef __XENO__
+#ifdef __COBALT__
     static const std::string pipe_prefix ( "/proc/xenomai/registry/rtipc/xddp/" );
 #else
     static const std::string pipe_prefix ( "/tmp/" );
@@ -37,7 +37,7 @@ public:
 
         std::string pipe = pipe_prefix + pipe_name;
 
-#ifdef __XENO__
+#ifdef __COBALT__
         fd = xddp_bind ( pipe_name.c_str(), pool_size );
 #else
         mkfifo ( pipe.c_str(), S_IRWXU|S_IRWXG );
@@ -53,7 +53,7 @@ public:
         }
 
         close ( fd );
-#ifndef __XENO__
+#ifndef __COBALT__
         std::string pipe = pipe_prefix + pipe_name;
         unlink ( pipe.c_str() );
 #endif
@@ -76,7 +76,7 @@ public:
         if ( fd <= 0 ) { return 0; }
         /////////////////////////////////////////////////////////
         // NON-BLOCKING, read buff_size byte from pipe or cross domain socket
-#if __XENO__
+#if __COBALT__
         return recvfrom ( fd, ( void* ) &rx, sizeof ( rx ), MSG_DONTWAIT, NULL, 0 );
 #else
         // NON-BLOCKING
@@ -89,7 +89,7 @@ public:
         if ( fd <= 0 ) { return 0; }
         /////////////////////////////////////////////////////////
         // NON-BLOCKING, read buff_size byte from pipe or cross domain socket
-#if __XENO__
+#if __COBALT__
         return recvfrom ( fd, (void*)buffer, size, MSG_DONTWAIT, NULL, 0 );
 #else
         // NON-BLOCKING

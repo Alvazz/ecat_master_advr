@@ -96,9 +96,9 @@ public:
     int init ( void );
     int shutdown ( bool );
     /**
-     * @brief reads and sets SDO, configure boards parameters
+     * @brief call factory_board that initialize known ESCs
      *
-     * @return void
+     * @return number of recognized ESCs
      */
     int configure_boards ( void );
 
@@ -284,7 +284,7 @@ private:
     uint32_t    sync_cycle_offset_ns;
 
 
-#ifdef __XENO__
+#ifdef __COBALT__
     pthread_mutex_t rd_mtx, wr_mtx;
 #else
     std::mutex      rd_mtx, wr_mtx;
@@ -434,7 +434,7 @@ inline int Ec_Boards_ctrl::get_zombie_map_bytype ( uint16_t ESC_type, std::map<i
 
 
 inline void Ec_Boards_ctrl::rd_LOCK ( void ) {
-#ifdef __XENO__
+#ifdef __COBALT__
     pthread_mutex_lock ( &rd_mtx );
 #else
     std::unique_lock<std::mutex> ( rd_mtx );
@@ -442,13 +442,13 @@ inline void Ec_Boards_ctrl::rd_LOCK ( void ) {
 }
 
 inline void Ec_Boards_ctrl::rd_UNLOCK ( void ) {
-#ifdef __XENO__
+#ifdef __COBALT__
     pthread_mutex_unlock ( &rd_mtx );
 #endif
 }
 
 inline void Ec_Boards_ctrl::wr_LOCK ( void ) {
-#ifdef __XENO__
+#ifdef __COBALT__
     pthread_mutex_lock ( &rd_mtx );
 #else
     std::unique_lock<std::mutex> ( wr_mtx );
@@ -456,7 +456,7 @@ inline void Ec_Boards_ctrl::wr_LOCK ( void ) {
 }
 
 inline void Ec_Boards_ctrl::wr_UNLOCK ( void ) {
-#ifdef __XENO__
+#ifdef __COBALT__
     pthread_mutex_unlock ( &wr_mtx );
 #endif
 }

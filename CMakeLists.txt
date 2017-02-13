@@ -11,7 +11,6 @@ set(SOEM_ROOT           $ENV{SOEM_ROOT} CACHE PATH "Base path of the SOEM header
 
 if ( ${ENABLE_XENO} )
     find_package(Xenomai)
-    find_package(RTnet)
 endif()
 
 if ( Xenomai_FOUND )

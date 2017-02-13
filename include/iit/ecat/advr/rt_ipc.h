@@ -3,8 +3,7 @@
 
 #include <stddef.h>
 
-#include <rtdk.h>
-#include <rtdm/rtipc.h>
+#include <rtdm/ipc.h>
 
 /*
 XDDP stands for "cross-domain datagram protocol", i.e. to exchange
