@@ -44,6 +44,7 @@ set(LIB_SOURCES
     src/power_coman_board.cpp
     src/ft6_esc.cpp
     src/foot_sensor_esc.cpp
+    src/imu_Vn_esc.cpp
     src/test_esc.cpp
 )
 
