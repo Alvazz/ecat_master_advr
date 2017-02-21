@@ -335,7 +335,7 @@ public:
                 DPRINTF ( "\tPosGain %f %f %f\n", gains[0], gains[1], gains[2] );
             
             } else if ( controller_type == CTRL_SET_IMPED_MODE ) {
-
+#if 0
                 // Impedance gains : position PD torque PI 
                 // PosGainP
                 writeSDO_byname( "gain_0", (uint16_t)(gains[0]/100.0));
@@ -347,6 +347,24 @@ public:
                 //writeSDO_byname( "gain_3", (uint16_t)(sdo.TorGainP));
                 // TorGainIs
                 writeSDO_byname( "gain_4", (uint16_t)(sdo.TorGainI*1000));
+#endif                
+                
+                // pos_Kp
+                gain = (uint16_t)gains[0];
+                writeSDO_byname ( "gain_0", gain );
+                // pos_Kd
+                gain = (uint16_t)gains[1];
+                writeSDO_byname ( "gain_1", gain );
+                // tor_Kp
+                gain = (uint16_t)(gains[2] * 10000);
+                writeSDO_byname ( "gain_2", gain );
+                // tor_Kd
+                gain = (uint16_t)(gains[3] * 10000);    
+                writeSDO_byname ( "gain_3", gain );
+                // tor_Ki
+                gain = (uint16_t)(gains[4] * 10000);
+                writeSDO_byname ( "gain_4", gain );
+                
                 
                 oss << tx_pdo;
                 DPRINTF ( "\ttx_pdo %s\n", oss.str().c_str() );
@@ -563,17 +581,16 @@ inline int LpESC::read_conf ( std::string conf_key, const YAML::Node & root_cfg 
     set_flash_cmd_X ( this, FLASH_SAVE );
 
 #else        
-    std::vector<std::string> upg_par_names = std::initializer_list<std::string> {
-        "Motor_Inertia", "Inv_Motor_Inertia", "Observer_Cut_Off",
-        "Inv_Geared_Torque_Constant", "Geared_Torque_Constant",
-        "Winding_Resistance", "Voltage_Feedforward", "BackEmf_Compensation"
-    };
-    float f_par;
-    for ( auto const par_name : upg_par_names ) {
-        readSDO_byname ( par_name.c_str(), f_par );
-        DPRINTF("readSDO_byname ( %s, %f )\n", par_name.c_str(), f_par);
-    }
-
+//     std::vector<std::string> upg_par_names = std::initializer_list<std::string> {
+//         "Motor_Inertia", "Inv_Motor_Inertia", "Observer_Cut_Off",
+//         "Inv_Geared_Torque_Constant", "Geared_Torque_Constant",
+//         "Winding_Resistance", "Voltage_Feedforward", "BackEmf_Compensation"
+//     };
+//     float f_par;
+//     for ( auto const par_name : upg_par_names ) {
+//         readSDO_byname ( par_name.c_str(), f_par );
+//         DPRINTF("readSDO_byname ( %s, %f )\n", par_name.c_str(), f_par);
+//     }
 #endif        
    
     return EC_WRP_OK;

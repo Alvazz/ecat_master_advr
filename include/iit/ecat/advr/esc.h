@@ -303,7 +303,7 @@ struct McEscPdoTypes {
         int16_t      link_vel;          // mrad/s 
         int16_t      motor_vel;         // mrad/s
         float        torque;            // Nm
-        uint16_t     temperature;       // C
+        uint16_t     temperature;       // C (motor_temp<<8)|board_temp
         uint16_t     fault;
         uint16_t     rtt;               // us
         uint16_t     op_idx_ack;        // op [ack/nack] , idx
@@ -315,7 +315,8 @@ struct McEscPdoTypes {
             os << (float)link_vel/1000 << delim;
             os << (float)motor_vel/1000 << delim;
             os << torque << delim;
-            os << temperature << delim;
+            os << ((temperature>>8)&0xFF) << delim;
+            os << (temperature&0xFF) << delim;
             os << fault << delim;
             os << rtt << delim;
             os << op_idx_ack << delim;
@@ -339,7 +340,8 @@ struct McEscPdoTypes {
             JPDO ( (float)link_vel/1000 );
             JPDO ( (float)motor_vel/1000 );
             JPDO ( torque );
-            JPDO ( temperature );
+            JPDO ( (temperature>>8)&0xFF );
+            JPDO ( temperature&0xFF );
             JPDO ( fault );
             JPDO ( rtt );
             JPDO ( op_idx_ack );
@@ -361,6 +363,8 @@ struct McEscPdoTypes {
             pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_motor_vel((float)motor_vel/1000);
             pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_torque(torque);
             pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_temperature(temperature);
+            pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_motor_temp((temperature>>8)&0xFF);
+            pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_board_temp(temperature&0xFF);
             pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_fault(fault);
             pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_rtt(rtt);
             pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_op_idx_ack(op_idx_ack);
