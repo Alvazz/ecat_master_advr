@@ -8,6 +8,7 @@
 #define __IIT_ECAT_ADVR_TEST_ESC_H__
 
 #include <iit/ecat/advr/esc.h>
+#include <iit/ecat/advr/aux_pdo.h>
 #include <iit/ecat/advr/log_esc.h>
 #include <iit/ecat/advr/pipes.h>
 #include <iit/ecat/utils.h>
@@ -260,7 +261,6 @@ public:
         //pb_toString( &sz_string , rx_pdo );
         //xddp_write( sz_string.c_str() );
 
-
     }
 
     virtual void on_writePDO ( void ) {
@@ -269,7 +269,7 @@ public:
         ///////////////////////////////////////////////////
         // pdo_aux 
         if ( ++pdo_aux_it == pdo_auxes_map.end() ) { pdo_aux_it = pdo_auxes_map.begin(); }
-        curr_pdo_aux = &pdo_aux_it->second;
+        curr_pdo_aux = pdo_aux_it->second;
         curr_pdo_aux->on_tx(tx_pdo);
     }
 
@@ -289,20 +289,15 @@ public:
             init_SDOs();
             init_sdo_lookup();
             
-            pos_ref_fb_aux = PDO_aux(getSDObjd("pos_ref_fb"));
-            volt_ref_fb_aux = PDO_aux(getSDObjd("volt_ref_fb"));
-            vout_fb_aux = PDO_aux(getSDObjd("vout_fb"));
-            current_fb_aux = PDO_aux(getSDObjd("current_fb"));
-            pwm_duty_aux = PDO_aux(getSDObjd("pwm_duty"));
             // fill map, select which aux  
-            pdo_auxes_map["pos_ref_fb"] = pos_ref_fb_aux;
-            pdo_auxes_map["current_fb"] = current_fb_aux;
-            pdo_auxes_map["volt_ref_fb"] = volt_ref_fb_aux;
-            pdo_auxes_map["vout_fb"] = vout_fb_aux;
-            pdo_auxes_map["pwm_duty"] = pwm_duty_aux;
+            pdo_auxes_map["pos_ref_fb"]  = MK_PDO_AUX(PDO_rd_aux,"pos_ref_fb_aux");
+            pdo_auxes_map["current_fb"]  = MK_PDO_AUX(PDO_rd_aux,"current_fb_aux");
+            pdo_auxes_map["volt_ref_fb"] = MK_PDO_AUX(PDO_rd_aux,"volt_ref_fb_aux");
+            pdo_auxes_map["vout_fb"]     = MK_PDO_AUX(PDO_rd_aux,"vout_fb_aux");
+            pdo_auxes_map["pwm_duty"]    = MK_PDO_AUX(PDO_wr_aux,"pwm_duty_aux");
             
             pdo_aux_it = pdo_auxes_map.begin();
-            curr_pdo_aux = &pdo_aux_it->second; //&pos_ref_fb_aux;
+            curr_pdo_aux = pdo_aux_it->second; //&pos_ref_fb_aux;
 
         } catch ( EscWrpError &e ) {
 
@@ -350,23 +345,15 @@ private:
         pb_rx_pdo.SerializeToString(pb_str);
     }
 
-
     objd_t * SDOs;
 
     stat_t  s_rtt;
     
     iit::advr::Ec_slave_pdo pb_rx_pdo;
             
-    PDO_aux *   curr_pdo_aux;
-    PDO_aux     pos_ref_fb_aux;
-    PDO_aux     volt_ref_fb_aux;
-    PDO_aux     vout_fb_aux;
-    PDO_aux     current_fb_aux;
-    PDO_aux     pwm_duty_aux;
-    
-    std::map<std::string,PDO_aux>           pdo_auxes_map;
-    std::map<std::string,PDO_aux>::iterator pdo_aux_it;
-
+    std::shared_ptr<PDO_aux>                                    curr_pdo_aux;
+    std::map<std::string,std::shared_ptr<PDO_aux>>              pdo_auxes_map;
+    std::map<std::string,std::shared_ptr<PDO_aux>>::iterator    pdo_aux_it;
 
 };
 

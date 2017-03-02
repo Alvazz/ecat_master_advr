@@ -82,14 +82,17 @@ static const iit::ecat::objd_t source_SDOs[] = {
     { 0x8001, 0xd, DTYPE_REAL32,           32, ATYPE_RO, "motor_temp",          0},
 
     // SD0 0x8002
-    { 0x8002, 1, DTYPE_REAL32,      32, ATYPE_RO, "pos_ref_fb",                 0},
-    { 0x8002, 2, DTYPE_REAL32,      32, ATYPE_RO, "iq_ref_fb",                  0},
-    { 0x8002, 3, DTYPE_REAL32,      32, ATYPE_RO, "iq_out_fb",                  0},
-    { 0x8002, 4, DTYPE_REAL32,      32, ATYPE_RO, "torque_no_average",          0},
-    { 0x8002, 5, DTYPE_REAL32,      32, ATYPE_RO, "torque_no_calibrated",       0},
-    { 0x8002, 6, DTYPE_REAL32,      32, ATYPE_RO, "board_temp_fb",              0},
-    { 0x8002, 7, DTYPE_REAL32,      32, ATYPE_RO, "motor_temp_fb",              0},
-    { 0x8002, 8, DTYPE_REAL32,      32, ATYPE_RO, "i_batt_fb",                  0},
+    { 0x8002, 0x1, DTYPE_REAL32,      32, ATYPE_RO, "pos_ref_fb",                 0},
+    { 0x8002, 0x2, DTYPE_REAL32,      32, ATYPE_RO, "iq_ref_fb",                  0},
+    { 0x8002, 0x3, DTYPE_REAL32,      32, ATYPE_RO, "iq_out_fb",                  0},
+    { 0x8002, 0x4, DTYPE_REAL32,      32, ATYPE_RO, "id_ref_fb",                  0},
+    { 0x8002, 0x5, DTYPE_REAL32,      32, ATYPE_RO, "id_out_fb",                  0},
+    { 0x8002, 0x6, DTYPE_REAL32,      32, ATYPE_RO, "torque_no_average",          0},
+    { 0x8002, 0x7, DTYPE_REAL32,      32, ATYPE_RO, "torque_no_calibrated",       0},
+    { 0x8002, 0x8, DTYPE_REAL32,      32, ATYPE_RO, "board_temp_fb",              0},
+    { 0x8002, 0x9, DTYPE_REAL32,      32, ATYPE_RO, "motor_temp_fb",              0},
+    { 0x8002, 0xa, DTYPE_REAL32,      32, ATYPE_RO, "i_batt_fb",                  0},
+    { 0x8002, 0xb, DTYPE_REAL32,      32, ATYPE_RW, "iq_offset",                  0},
 
     {0, 0, 0, 0, 0, 0, 0 }
 
@@ -168,11 +171,14 @@ void CentAcESC::init_SDOs ( void ) {
     SDOs[i++].data = ( void* ) &CentAcESC::sdo.pos_ref_fb;
     SDOs[i++].data = ( void* ) &CentAcESC::sdo.iq_ref_fb;
     SDOs[i++].data = ( void* ) &CentAcESC::sdo.iq_out_fb;
+    SDOs[i++].data = ( void* ) &CentAcESC::sdo.id_ref_fb;
+    SDOs[i++].data = ( void* ) &CentAcESC::sdo.id_out_fb;
     SDOs[i++].data = ( void* ) &CentAcESC::sdo.torque_no_average;
     SDOs[i++].data = ( void* ) &CentAcESC::sdo.torque_no_calibrated;
     SDOs[i++].data = ( void* ) &CentAcESC::sdo.board_temp_fb;
     SDOs[i++].data = ( void* ) &CentAcESC::sdo.motor_temp_fb;
     SDOs[i++].data = ( void* ) &CentAcESC::sdo.i_batt_fb;
+    SDOs[i++].data = ( void* ) &CentAcESC::sdo.iq_offset;
     
     // end marker
     SDOs[i++].data = 0;

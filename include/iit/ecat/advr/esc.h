@@ -39,7 +39,7 @@
 #define CTRL_SET_POS_LNK_MODE	0x005D
 #define CTRL_SET_POS_LNK_ERR	0x005E
 
-#define CTRL_FAN_ON		Arizina, Oregon		0x0026
+#define CTRL_FAN_ON				0x0026
 #define CTRL_FAN_OFF			0x0062
 #define CTRL_LED_ON				0x0019
 #define CTRL_LED_OFF			0x0091
@@ -398,57 +398,6 @@ inline std::ostream& operator<< (std::ostream& os, const McEscPdoTypes::pdo_tx& 
 inline std::ostream& operator<< (std::ostream& os, const McEscPdoTypes::pdo_rx& rx_pdo ) {
     return rx_pdo.dump(os,"\t");
 }
-
-
-class PDO_aux {
-public:
-    PDO_aux(): sdo_objd(NULL) {}
-    PDO_aux( const objd_t * sdo_obj_data ): sdo_objd( sdo_obj_data ) {}
-    PDO_aux( const PDO_aux& rhs ): sdo_objd( rhs.sdo_objd ) {}
-    //
-    // these template methods expect [rx/tx]_pdo struct with op_idx_aux/op_idx_ack and aux fields
-    // 
-    template<class T>
-    int on_tx( T& tx_pdo ) {
-        if ( sdo_objd == 0 ) return -1;
-        if ( sdo_objd->access == ATYPE_RW ) { 
-            // set op
-            tx_pdo.op_idx_aux = 0xFB << 8 | sdo_objd->subindex & 0xFF;
-            tx_pdo.aux = *(float*)sdo_objd->data;
-        } else {
-            // get op
-            tx_pdo.op_idx_aux = 0xBF << 8 | sdo_objd->subindex & 0xFF;
-        }
-        //DPRINTF("PDO_aux 0x%04X\n", tx_pdo.op_idx_aux);
-        return 0;
-    };
-    
-    template<class T>
-    int on_rx( T& rx_pdo) {
-        static uint64_t prev_err_ts;
-        if ( sdo_objd == 0 ) return -1;
-        // check nack
-        if ( (rx_pdo.op_idx_ack >> 8) == 0xEE ) {
-            DPRINTF("Fail PDO_aux reason 0x%02X\n", (uint32_t)rx_pdo.aux);
-            return -1;
-        }
-        // check idx
-        if ( (rx_pdo.op_idx_ack & 0xFF) != sdo_objd->subindex ) {
-            //DPRINTF("[dt err %ld\trtt %d] Fail PDO_aux idx %d != %d\n", get_time_ns()-prev_err_ts, rx_pdo.rtt, sdo_objd->subindex, rx_pdo.op_idx_ack & 0xFF );
-            prev_err_ts = get_time_ns();
-            return -1;
-        }
-        
-        *(float*)sdo_objd->data = rx_pdo.aux;
-        return 0;
-    }
-    
-    int get_idx(void) { return (sdo_objd == 0) ? 0 : sdo_objd->subindex; }
-    
-private:
-    const objd_t *  sdo_objd; 
-};
-
 
 
 inline int check_cmd_ack ( uint16_t cmd, uint16_t ack ) {

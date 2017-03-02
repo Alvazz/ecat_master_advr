@@ -16,6 +16,7 @@
 #include <iit/ecat/ec_master_iface.h>
 #include <iit/ecat/slave_wrapper.h>
 #include <iit/ecat/advr/esc.h>
+#include <iit/ecat/advr/aux_pdo.h>
 #include <iit/ecat/advr/motor_iface.h>
 #include <iit/ecat/advr/log_esc.h>
 #include <iit/ecat/advr/pipes.h>
@@ -82,11 +83,14 @@ struct CentAcEscSdoTypes {
     float       pos_ref_fb;
     float       iq_ref_fb;
     float       iq_out_fb;
+    float       id_ref_fb;
+    float       id_out_fb;
     float       torque_no_average;
     float       torque_no_calibrated;
     float       board_temp_fb;
     float       motor_temp_fb;
     float       i_batt_fb;
+    float       iq_offset;
 
 };
 
@@ -269,7 +273,7 @@ protected :
         // - pdo_aux 
         curr_pdo_aux->on_rx(rx_pdo);
         // if pos_ref_fb apply transformation
-        if ( curr_pdo_aux->get_idx() == 1 ) {
+        if ( ! strcmp( curr_pdo_aux->get_objd()->name, "pos_ref_fb") ) {
             rx_pdo.aux  = centac_esc::M2J ( rx_pdo.aux,_sgn,_offset );
         }
         
@@ -308,7 +312,7 @@ protected :
         ///////////////////////////////////////////////////
         // pdo_aux 
         if ( ++pdo_aux_it == pdo_auxes_map.end() ) { pdo_aux_it = pdo_auxes_map.begin(); }
-        curr_pdo_aux = &pdo_aux_it->second;
+        curr_pdo_aux = pdo_aux_it->second;
         curr_pdo_aux->on_tx(tx_pdo);
         
         // NOOOOOOOOOOOO
@@ -368,26 +372,22 @@ public :
             init_SDOs();
             init_sdo_lookup();
             
-            pos_ref_fb_aux = PDO_aux(getSDObjd("pos_ref_fb"));
-            iq_ref_fb_aux = PDO_aux(getSDObjd("iq_ref_fb"));
-            iq_out_fb_aux = PDO_aux(getSDObjd("iq_out_fb"));
-            torque_no_average_aux = PDO_aux(getSDObjd("torque_no_average"));
-            torque_no_calibrated_aux = PDO_aux(getSDObjd("torque_no_calibrated"));
-            motor_temp_fb_aux = PDO_aux(getSDObjd("motor_temp_fb"));
-            board_temp_fb_aux = PDO_aux(getSDObjd("board_temp_fb"));
-            i_batt_fb_aux = PDO_aux(getSDObjd("i_batt_fb"));
             // fill map, select which aux  
-            pdo_auxes_map["pos_ref_fb"] = pos_ref_fb_aux;
-            //pdo_auxes_map["iq_ref_fb"] = iq_ref_fb_aux;
-            //pdo_auxes_map["iq_out_fb"] = iq_out_fb_aux;
-            //pdo_auxes_map["torque_no_average"] = torque_no_average_aux;
-            //pdo_auxes_map["torque_no_calibrated"] = torque_no_calibrated_aux;
-            //pdo_auxes_map["motor_temp_fb"] = motor_temp_fb_aux;
-            //pdo_auxes_map["board_temp_fb"] = board_temp_fb_aux;
-            //pdo_auxes_map["i_batt_fb"] = i_batt_fb_aux;
+            pdo_auxes_map["pos_ref_fb"]         = MK_PDO_AUX(PDO_rd_aux,"pos_ref_fb");
+            pdo_auxes_map["iq_ref_fb"]          = MK_PDO_AUX(PDO_rd_aux,"iq_ref_fb");
+            pdo_auxes_map["iq_out_fb"]          = MK_PDO_AUX(PDO_rd_aux,"iq_out_fb");
+            pdo_auxes_map["id_ref_fb"]          = MK_PDO_AUX(PDO_rd_aux,"id_ref_fb");
+            pdo_auxes_map["id_out_fb"]          = MK_PDO_AUX(PDO_rd_aux,"id_out_fb");
+            pdo_auxes_map["torque_no_average"]  = MK_PDO_AUX(PDO_rd_aux,"torque_no_average");
+            pdo_auxes_map["torque_no_calibrated"] = MK_PDO_AUX(PDO_rd_aux,"torque_no_calibrated");
+            pdo_auxes_map["motor_temp_fb"]      = MK_PDO_AUX(PDO_rd_aux,"motor_temp_fb");
+            pdo_auxes_map["board_temp_fb"]      = MK_PDO_AUX(PDO_rd_aux,"board_temp_fb");
+            pdo_auxes_map["i_batt_fb"]          = MK_PDO_AUX(PDO_rd_aux,"i_batt_fb");
+            pdo_auxes_map["iq_offset_wr"]       = MK_PDO_AUX(PDO_wr_aux,"iq_offset");
+            pdo_auxes_map["iq_offset_wrd"]      = MK_PDO_AUX_WRD(PDO_wrd_aux,"iq_offset","iq_out_fb");
             
             pdo_aux_it = pdo_auxes_map.begin();
-            curr_pdo_aux = &pdo_aux_it->second; //&pos_ref_fb_aux;
+            curr_pdo_aux = pdo_aux_it->second;
             
             readSDO_byname ( "Joint_robot_id", Joint_robot_id );
             readSDO_byname ( "Serial_Number_A" );
@@ -750,18 +750,10 @@ private:
     
     iit::advr::Ec_slave_pdo pb_rx_pdo;
             
-    PDO_aux *   curr_pdo_aux;
-    PDO_aux     pos_ref_fb_aux;
-    PDO_aux     iq_ref_fb_aux;
-    PDO_aux     iq_out_fb_aux;
-    PDO_aux     torque_no_average_aux;
-    PDO_aux     torque_no_calibrated_aux;
-    PDO_aux     motor_temp_fb_aux;
-    PDO_aux     board_temp_fb_aux;
-    PDO_aux     i_batt_fb_aux;
-    
-    std::map<std::string,PDO_aux>           pdo_auxes_map;
-    std::map<std::string,PDO_aux>::iterator pdo_aux_it;
+    std::shared_ptr<PDO_aux>                                    curr_pdo_aux;
+    std::map<std::string,std::shared_ptr<PDO_aux>>              pdo_auxes_map;
+    std::map<std::string,std::shared_ptr<PDO_aux>>::iterator    pdo_aux_it;
+        
 };
 
 
