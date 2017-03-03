@@ -63,7 +63,17 @@ struct CentAcEscSdoTypes {
     float       Enc_offset;
     int         Serial_number_A;
     int         Joint_robot_id;
-
+    float       gearedMotorInertia;
+    float       motorTorqueConstant;
+    float       DOB_filterFrequencyHz;
+    float       torqueFixedOffset;
+    float       voltageFeedForward;
+    float       windingResistance;
+    float       backEmfCompensation;
+    float       directTorqueFeedbackGain;
+    float       sandBoxAngle;
+    float       sandBoxFriction;
+    
     // ram
     char        m3_fw_ver[8];
     char        c28_fw_ver[8];
@@ -78,6 +88,10 @@ struct CentAcEscSdoTypes {
     float       torque_read;
     float       board_temp;
     float       motor_temp;
+    float       maxLimitedCurr;
+    float       torqueSensTemp;
+    float       DacChA;
+    float       DacChB;
     
     // aux pdo
     float       pos_ref_fb;
@@ -428,6 +442,9 @@ public :
 
         float max_cur = node_cfg["max_current_A"].as<float>();
         writeSDO_byname ( "Max_cur", max_cur );
+        //
+        float sandBoxFriction = 100;
+        writeSDO_byname ( "sandBoxFriction", sandBoxFriction );
 
         // set filename with robot_id
         log_filename = std::string ( "/tmp/CentAcESC_"+std::to_string ( sdo.Joint_robot_id ) +"_log.txt" );
@@ -589,11 +606,11 @@ public :
         return EC_BOARD_OK;
     }
     virtual int set_velRef ( float joint_vel ) {
-        tx_pdo.vel_ref = (int16_t)(joint_vel/1000);
+        tx_pdo.vel_ref = (int16_t)(joint_vel*1000);
         return EC_BOARD_OK;
     }
     virtual int set_torRef ( float joint_tor ) {
-        tx_pdo.tor_ref = (int16_t)(joint_tor/100);
+        tx_pdo.tor_ref = (int16_t)(joint_tor*100);
         return EC_BOARD_OK;
     }
     virtual int set_ivRef ( float joint_iv ) {
