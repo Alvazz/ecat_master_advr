@@ -92,8 +92,8 @@ static const iit::ecat::objd_t source_SDOs[] = {
     { 0x8001, 0xd,  DTYPE_REAL32,           32, ATYPE_RO, "motor_temp",         0},
     { 0x8001, 0xe,  DTYPE_REAL32,           32, ATYPE_RO, "maxLimitedCurr",     0},
     { 0x8001, 0xf,  DTYPE_REAL32,           32, ATYPE_RO, "torqueSensTemp",     0},
-    { 0x8001, 0x10, DTYPE_UNSIGNED16,       32, ATYPE_RO, "DacChA",             0},
-    { 0x8001, 0x11, DTYPE_UNSIGNED16,       32, ATYPE_RO, "DacChB",             0},
+    { 0x8001, 0x10, DTYPE_UNSIGNED16,       16, ATYPE_RW, "DacChA",             0},
+    { 0x8001, 0x11, DTYPE_UNSIGNED16,       16, ATYPE_RW, "DacChB",             0},
 
     // SD0 0x8002
     { 0x8002, 0x1, DTYPE_REAL32,      32, ATYPE_RO, "pos_ref_fb",               0},

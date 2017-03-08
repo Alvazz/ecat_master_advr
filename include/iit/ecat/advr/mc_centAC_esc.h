@@ -443,8 +443,6 @@ public :
         float max_cur = node_cfg["max_current_A"].as<float>();
         writeSDO_byname ( "Max_cur", max_cur );
         //
-        float sandBoxFriction = 100;
-        writeSDO_byname ( "sandBoxFriction", sandBoxFriction );
 
         // set filename with robot_id
         log_filename = std::string ( "/tmp/CentAcESC_"+std::to_string ( sdo.Joint_robot_id ) +"_log.txt" );
@@ -568,7 +566,6 @@ public :
                 try {
                     gains = node_cfg["pid"]["impedance"].as<std::vector<float>>();
                     assert ( gains.size() == 5 );
-                    DPRINTF ( "using yaml values\n");  
                 } catch ( std::exception &e ) {
                     DPRINTF ( "Catch Exception in %s ... %s\n", __PRETTY_FUNCTION__, e.what() );
                 }
@@ -726,6 +723,26 @@ private:
         _offset = node_cfg["pos_offset"].as<float>();
         _offset = DEG2RAD ( _offset );
 
+#if 0
+        if ( node_cfg["upg_params"] ) {
+            auto upg_params = node_cfg["upg_params"].as<std::map<std::string,float>>();
+            for ( auto const par : upg_params ) {
+                float upgPar;
+                upgPar = node_cfg["upg_params"][par.first].as<float>();
+                writeSDO_byname ( par.first.c_str(), upgPar );
+                DPRINTF("writeSDO_byname ( %s, %f )\n", par.first.c_str(), upgPar);
+            }
+        }
+        set_flash_cmd_X ( this, FLASH_SAVE );
+#endif
+        if ( node_cfg["upg_params"] ) {
+            auto upg_params = node_cfg["upg_params"].as<std::map<std::string,float>>();
+            for ( auto const par : upg_params ) {
+                float upgPar;
+                readSDO_byname ( par.first.c_str(), upgPar );
+                DPRINTF("readSDO_byname ( %s, %f )\n", par.first.c_str(), upgPar);
+            }
+        }
         return EC_WRP_OK;
     }
     

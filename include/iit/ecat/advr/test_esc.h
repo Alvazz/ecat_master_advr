@@ -290,11 +290,11 @@ public:
             init_sdo_lookup();
             
             // fill map, select which aux  
-            pdo_auxes_map["pos_ref_fb"]  = MK_PDO_AUX(PDO_rd_aux,"pos_ref_fb_aux");
-            pdo_auxes_map["current_fb"]  = MK_PDO_AUX(PDO_rd_aux,"current_fb_aux");
-            pdo_auxes_map["volt_ref_fb"] = MK_PDO_AUX(PDO_rd_aux,"volt_ref_fb_aux");
-            pdo_auxes_map["vout_fb"]     = MK_PDO_AUX(PDO_rd_aux,"vout_fb_aux");
-            pdo_auxes_map["pwm_duty"]    = MK_PDO_AUX(PDO_wr_aux,"pwm_duty_aux");
+            pdo_auxes_map["pos_ref_fb"]  = MK_PDO_AUX(PDO_rd_aux,"pos_ref_fb");
+            pdo_auxes_map["current_fb"]  = MK_PDO_AUX(PDO_rd_aux,"current_fb");
+            pdo_auxes_map["volt_ref_fb"] = MK_PDO_AUX(PDO_rd_aux,"volt_ref_fb");
+            pdo_auxes_map["vout_fb"]     = MK_PDO_AUX(PDO_rd_aux,"vout_fb");
+            pdo_auxes_map["pwm_duty"]    = MK_PDO_AUX(PDO_wr_aux,"pwm_duty");
             
             pdo_aux_it = pdo_auxes_map.begin();
             curr_pdo_aux = pdo_aux_it->second; //&pos_ref_fb_aux;
