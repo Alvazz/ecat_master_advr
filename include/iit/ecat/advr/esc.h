@@ -21,34 +21,36 @@
 
 
 // Control commands
-#define CTRL_POWER_MOD_ON		0x00A5
-#define CTRL_POWER_MOD_OFF		0x005A
+#define CTRL_POWER_MOD_ON       0x00A5
+#define CTRL_POWER_MOD_OFF      0x005A
 
 #define CTRL_SET_DIRECT_MODE    0x004F
 
-#define CTRL_SET_IMPED_MODE		0x00D4
-#define CTRL_SET_POS_MODE		0x003B
+#define CTRL_SET_IMPED_MODE     0x00D4
+#define CTRL_SET_POS_MODE       0x003B
 #define CTRL_SET_POS_LINK_MODE  0x003C
 #define CTRL_SET_VEL_MODE       0x0037
 #define CTRL_SET_VOLT_MODE      0x0039
 #define CTRL_SET_CURR_MODE      0x00CC
 
-#define CTRL_SET_MIX_POS_MODE	0x003C
-#define CTRL_SET_MIX_POS_MODE_2	0x003D
-#define CTRL_SET_POS_MOT_MODE	0x005C
-#define CTRL_SET_POS_LNK_MODE	0x005D
-#define CTRL_SET_POS_LNK_ERR	0x005E
+#define CTRL_SET_MIX_POS_MODE   0x003C
+#define CTRL_SET_MIX_POS_MODE_2 0x003D
+#define CTRL_SET_POS_MOT_MODE   0x005C
+#define CTRL_SET_POS_LNK_MODE   0x005D
+#define CTRL_SET_POS_LNK_ERR    0x005E
 
-#define CTRL_FAN_ON				0x0026
-#define CTRL_FAN_OFF			0x0062
-#define CTRL_LED_ON				0x0019
-#define CTRL_LED_OFF			0x0091
+#define CTRL_FAN_ON             0x0026
+#define CTRL_FAN_OFF            0x0062
+#define CTRL_LED_ON             0x0019
+#define CTRL_LED_OFF            0x0091
+#define CTRL_SAND_BOX_ON        0x0079
+#define CTRL_SAND_BOX_OFF       0x0097
 
 //#define CTRL_ALIGN_ENCODERS		0x00B2
-#define CTRL_SET_ZERO_POSITION	0x00AB
+#define CTRL_SET_ZERO_POSITION  0x00AB
 
 // FT6
-#define CTRL_REMOVE_TORQUE_OFFS	0x00CD
+#define CTRL_REMOVE_TORQUE_OFFS 0x00CD
 
 #define FLASH_SAVE              0x0012
 

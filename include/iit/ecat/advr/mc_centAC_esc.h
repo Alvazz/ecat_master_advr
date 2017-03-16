@@ -124,7 +124,7 @@ struct BIT_FAULT {
         uint16_t  m3_fault_hardware:1;
         uint16_t  m3_params_out_of_range:1;
         uint16_t  m3_flag_2:1;
-        uint16_t  m3_flag_3:1;
+        uint16_t  m3_op_rx_pdo_fail:1;
         uint16_t  m3_link_enc_error_reading:1;
         uint16_t  m3_link_enc_hw_error:1;
         uint16_t  m3_defl_enc_error_reading:1;
@@ -139,12 +139,13 @@ struct BIT_FAULT {
         std::ostream& dump ( std::ostream& os, const std::string delim ) const {
        
             //CHECK_FAULT(os,delim, m3_rxpdo_pos_ref);
-            do { if(m3_rxpdo_pos_ref) { os << "m3_rxpdo_pos_ref" << delim;} } while(0);
+            //do { if(m3_rxpdo_pos_ref) { os << "m3_rxpdo_pos_ref" << delim;} } while(0);
             os << m3_rxpdo_pos_ref << delim;
             os << m3_rxpdo_vel_ref << delim;
             os << m3_rxpdo_tor_ref << delim;
             os << m3_fault_hardware << delim;
             os << m3_params_out_of_range << delim;
+            os << m3_op_rx_pdo_fail << delim;
             os << m3_link_enc_error_reading << delim;
             os << m3_link_enc_hw_error << delim;
             os << m3_defl_enc_error_reading << delim;
@@ -208,8 +209,9 @@ struct CentAcLogTypes {
 
 /**
 *
+* 
+* 
 **/
-
 
 class CentAcESC :
     public BasicEscWrapper<McEscPdoTypes,CentAcEscSdoTypes>,
@@ -284,11 +286,13 @@ protected :
         rx_pdo.motor_pos = centac_esc::M2J ( rx_pdo.motor_pos,_sgn,_offset );
         
         ///////////////////////////////////////////////////
-        // - pdo_aux 
-        curr_pdo_aux->on_rx(rx_pdo);
-        // if pos_ref_fb apply transformation
-        if ( ! strcmp( curr_pdo_aux->get_objd()->name, "pos_ref_fb") ) {
-            rx_pdo.aux  = centac_esc::M2J ( rx_pdo.aux,_sgn,_offset );
+        // - pdo_aux
+        if (pdo_aux_it != pdo_auxes_map.end() ) { 
+            curr_pdo_aux->on_rx(rx_pdo);
+            // if pos_ref_fb apply transformation
+            if ( ! strcmp( curr_pdo_aux->get_objd()->name, "pos_ref_fb") ) {
+                rx_pdo.aux  = centac_esc::M2J ( rx_pdo.aux,_sgn,_offset );
+            }
         }
         
         ///////////////////////////////////////////////////
@@ -325,10 +329,11 @@ protected :
         
         ///////////////////////////////////////////////////
         // pdo_aux 
-        if ( ++pdo_aux_it == pdo_auxes_map.end() ) { pdo_aux_it = pdo_auxes_map.begin(); }
-        curr_pdo_aux = pdo_aux_it->second;
-        curr_pdo_aux->on_tx(tx_pdo);
-        
+        if (pdo_aux_it != pdo_auxes_map.end() ) { 
+            if ( ++pdo_aux_it == pdo_auxes_map.end() ) { pdo_aux_it = pdo_auxes_map.begin(); }
+            curr_pdo_aux = pdo_aux_it->second;
+            curr_pdo_aux->on_tx(tx_pdo);
+        }
         // NOOOOOOOOOOOO
         // NOT HERE !!! use set_posRef to apply transformation from Joint to Motor
         //tx_pdo.pos_ref = hipwr_esc::J2M(tx_pdo.pos_ref,_sgn,_offset);
@@ -386,23 +391,6 @@ public :
             init_SDOs();
             init_sdo_lookup();
             
-            // fill map, select which aux  
-            pdo_auxes_map["pos_ref_fb"]         = MK_PDO_AUX(PDO_rd_aux,"pos_ref_fb");
-            pdo_auxes_map["iq_ref_fb"]          = MK_PDO_AUX(PDO_rd_aux,"iq_ref_fb");
-            pdo_auxes_map["iq_out_fb"]          = MK_PDO_AUX(PDO_rd_aux,"iq_out_fb");
-            pdo_auxes_map["id_ref_fb"]          = MK_PDO_AUX(PDO_rd_aux,"id_ref_fb");
-            pdo_auxes_map["id_out_fb"]          = MK_PDO_AUX(PDO_rd_aux,"id_out_fb");
-            pdo_auxes_map["torque_no_average"]  = MK_PDO_AUX(PDO_rd_aux,"torque_no_average");
-            pdo_auxes_map["torque_no_calibrated"] = MK_PDO_AUX(PDO_rd_aux,"torque_no_calibrated");
-            pdo_auxes_map["motor_temp_fb"]      = MK_PDO_AUX(PDO_rd_aux,"motor_temp_fb");
-            pdo_auxes_map["board_temp_fb"]      = MK_PDO_AUX(PDO_rd_aux,"board_temp_fb");
-            pdo_auxes_map["i_batt_fb"]          = MK_PDO_AUX(PDO_rd_aux,"i_batt_fb");
-            pdo_auxes_map["iq_offset_wr"]       = MK_PDO_AUX(PDO_wr_aux,"iq_offset");
-            pdo_auxes_map["iq_offset_wrd"]      = MK_PDO_AUX_WRD(PDO_wrd_aux,"iq_offset","iq_out_fb");
-            
-            pdo_aux_it = pdo_auxes_map.begin();
-            curr_pdo_aux = pdo_aux_it->second;
-            
             readSDO_byname ( "Joint_robot_id", Joint_robot_id );
             readSDO_byname ( "Serial_Number_A" );
             readSDO_byname ( "m3_fw_ver" );
@@ -433,13 +421,11 @@ public :
         }
 
         // redo read SDOs so we can apply _sgn and _offset to transform Min_pos Max_pos to Joint Coordinate
-        readSDO_byname ( "Min_pos" );
-        readSDO_byname ( "Max_pos" );
-        readSDO_byname ( "Max_vel" );
-        readSDO_byname ( "Max_tor" );
-        readSDO_byname ( "Max_cur" );
-        readSDO_byname ( "link_pos" );
-
+        auto const rd_sdos = { "Min_pos","Max_pos","Max_vel","Max_tor","Max_cur" };
+        for ( auto const sdo_name :  rd_sdos ) {
+                readSDO_byname ( sdo_name );
+        }
+       
         float max_cur = node_cfg["max_current_A"].as<float>();
         writeSDO_byname ( "Max_cur", max_cur );
         //
@@ -533,6 +519,9 @@ public :
             readSDO_byname ( "fault", fault );
             handle_fault();
 
+            // set sandbox activation 
+            set_ctrl_status_X ( this, CTRL_SAND_BOX_OFF );
+            
             // set controller mode
             set_ctrl_status_X ( this, controller_type );
 
@@ -723,27 +712,61 @@ private:
         _offset = node_cfg["pos_offset"].as<float>();
         _offset = DEG2RAD ( _offset );
 
-#if 0
-        if ( node_cfg["upg_params"] ) {
-            auto upg_params = node_cfg["upg_params"].as<std::map<std::string,float>>();
+        ///////////////////////////////////////////////////////////////////////
+        float upgPar, flsPar;
+        bool saveFlash = false;
+        if ( node_cfg["upd_params"] ) {
+            auto upg_params = node_cfg["upd_params"].as<std::map<std::string,float>>();
             for ( auto const par : upg_params ) {
-                float upgPar;
-                upgPar = node_cfg["upg_params"][par.first].as<float>();
-                writeSDO_byname ( par.first.c_str(), upgPar );
-                DPRINTF("writeSDO_byname ( %s, %f )\n", par.first.c_str(), upgPar);
+                upgPar = node_cfg["upd_params"][par.first].as<float>();
+                readSDO_byname ( par.first.c_str(), flsPar );
+                DPRINTF("readSDO_byname ( %s, %f )\n", par.first.c_str(), flsPar);
+                if ( upgPar != flsPar ) {
+                    writeSDO_byname ( par.first.c_str(), upgPar );
+                    DPRINTF("writeSDO_byname ( %s, %f )\n", par.first.c_str(), upgPar);
+                    saveFlash = true;
+                }
             }
         }
-        set_flash_cmd_X ( this, FLASH_SAVE );
-#endif
-        if ( node_cfg["upg_params"] ) {
-            auto upg_params = node_cfg["upg_params"].as<std::map<std::string,float>>();
-            for ( auto const par : upg_params ) {
-                float upgPar;
-                readSDO_byname ( par.first.c_str(), upgPar );
-                DPRINTF("readSDO_byname ( %s, %f )\n", par.first.c_str(), upgPar);
-            }
+        if ( saveFlash ) {
+            set_flash_cmd_X ( this, FLASH_SAVE );   // ret EC_BOARD_OK 
         }
-        return EC_WRP_OK;
+        ///////////////////////////////////////////////////////////////////////
+        if ( node_cfg["aux_pdo"] ) {
+            auto aux_pdo_map = node_cfg["aux_pdo"].as<std::map<std::string, std::vector<std::string>>>();
+            for ( auto const item : aux_pdo_map ) {
+                auto aux_type = item.first;
+                auto aux_set = item.second;
+                if ( aux_type == "rd" ) {
+                    for ( auto const aux_name : aux_set ) {
+                        pdo_auxes_map[aux_name] = MK_PDO_AUX(PDO_rd_aux,aux_name);
+                    }
+                } else if ( aux_type == "wr" ) {
+                    for ( auto const aux_name : aux_set ) {
+                        pdo_auxes_map[aux_name] = MK_PDO_AUX(PDO_wr_aux,aux_name);
+                    }
+                } else if ( aux_type == "wrd" ) {
+                    for ( auto const aux_name : aux_set ) {
+                        if ( aux_name.rfind("&&") ) {
+                            auto wr_name = aux_name.substr(0, aux_name.rfind("&&"));
+                            auto rd_name = aux_name.substr(aux_name.rfind("&&")+2);
+                            pdo_auxes_map[aux_name] = MK_PDO_AUX_WRD(PDO_wrd_aux,wr_name,rd_name);
+                        }
+                    }
+                } else {
+                    
+                }
+            }
+
+        }
+        DPRINTF("[PDO_aux] pdo_auxes_map size is %d\n", pdo_auxes_map.size());
+        pdo_aux_it = pdo_auxes_map.begin();
+        if (pdo_aux_it != pdo_auxes_map.end() ) { 
+            curr_pdo_aux = pdo_aux_it->second;
+        }
+        ///////////////////////////////////////////////////////////////////////
+        
+        return EC_BOARD_OK;
     }
     
     void pb_toString( std::string * pb_str , const pdo_rx_t _pdo_rx) {

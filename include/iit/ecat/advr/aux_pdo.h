@@ -14,8 +14,8 @@ namespace iit {
 namespace ecat {
 namespace advr {
 
-#define MK_PDO_AUX(kls,arg)  std::make_shared<kls>(kls(getSDObjd(arg)))
-#define MK_PDO_AUX_WRD(kls,arg1,arg2)  std::make_shared<kls>(kls(getSDObjd(arg1),getSDObjd(arg2)))
+#define MK_PDO_AUX(kls,arg)             std::make_shared<kls>(kls(getSDObjd(arg)))
+#define MK_PDO_AUX_WRD(kls,arg1,arg2)   std::make_shared<kls>(kls(getSDObjd(arg1),getSDObjd(arg2)))
 
 #define AUX_PDO_OP_SET  0xFB
 #define AUX_PDO_OP_GET  0xBF

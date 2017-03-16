@@ -243,8 +243,10 @@ public:
 
         ///////////////////////////////////////////////////
         // - pdo_aux 
-        curr_pdo_aux->on_rx(rx_pdo);
-        
+        if (pdo_aux_it != pdo_auxes_map.end() ) { 
+            curr_pdo_aux->on_rx(rx_pdo);
+        }
+
         ///////////////////////////////////////////////////
         // - logging 
         if ( _start_log ) {
@@ -268,10 +270,12 @@ public:
 
         ///////////////////////////////////////////////////
         // pdo_aux 
-        if ( ++pdo_aux_it == pdo_auxes_map.end() ) { pdo_aux_it = pdo_auxes_map.begin(); }
-        curr_pdo_aux = pdo_aux_it->second;
-        curr_pdo_aux->on_tx(tx_pdo);
-    }
+        if (pdo_aux_it != pdo_auxes_map.end() ) { 
+            if ( ++pdo_aux_it == pdo_auxes_map.end() ) { pdo_aux_it = pdo_auxes_map.begin(); }
+                curr_pdo_aux = pdo_aux_it->second;
+                curr_pdo_aux->on_tx(tx_pdo);
+            }
+        }
 
     virtual const objd_t * get_SDOs() {
         return SDOs;
@@ -290,14 +294,16 @@ public:
             init_sdo_lookup();
             
             // fill map, select which aux  
-            pdo_auxes_map["pos_ref_fb"]  = MK_PDO_AUX(PDO_rd_aux,"pos_ref_fb");
-            pdo_auxes_map["current_fb"]  = MK_PDO_AUX(PDO_rd_aux,"current_fb");
-            pdo_auxes_map["volt_ref_fb"] = MK_PDO_AUX(PDO_rd_aux,"volt_ref_fb");
-            pdo_auxes_map["vout_fb"]     = MK_PDO_AUX(PDO_rd_aux,"vout_fb");
-            pdo_auxes_map["pwm_duty"]    = MK_PDO_AUX(PDO_wr_aux,"pwm_duty");
-            
+//             pdo_auxes_map["pos_ref_fb"]  = MK_PDO_AUX(PDO_rd_aux,"pos_ref_fb");
+//             pdo_auxes_map["current_fb"]  = MK_PDO_AUX(PDO_rd_aux,"current_fb");
+//             pdo_auxes_map["volt_ref_fb"] = MK_PDO_AUX(PDO_rd_aux,"volt_ref_fb");
+//             pdo_auxes_map["vout_fb"]     = MK_PDO_AUX(PDO_rd_aux,"vout_fb");
+//             pdo_auxes_map["pwm_duty"]    = MK_PDO_AUX(PDO_wr_aux,"pwm_duty");
+//             
             pdo_aux_it = pdo_auxes_map.begin();
-            curr_pdo_aux = pdo_aux_it->second; //&pos_ref_fb_aux;
+            if (pdo_aux_it != pdo_auxes_map.end() ) { 
+                curr_pdo_aux = pdo_aux_it->second;
+            }
 
         } catch ( EscWrpError &e ) {
 
@@ -309,7 +315,10 @@ public:
             return EC_WRP_NOK;
         }
 
-        readSDO_byname ( "fw_ver" );
+        uint16_t status_cmd = 0xF0;
+        readSDO_byname  ( std::string("fw_ver") );
+        writeSDO_byname ( std::string("ctrl_status_cmd"), status_cmd );
+        readSDO_byname  ( std::string("ctrl_status_cmd_ack"), status_cmd );
         
         // Should be better to start logging when enter OP ....
         start_log ( true );
