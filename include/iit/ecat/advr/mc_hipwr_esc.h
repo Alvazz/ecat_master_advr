@@ -216,6 +216,8 @@ protected :
         // NOOOOOOOOOOOO
         // NOT HERE !!! use set_posRef to apply transformation from Joint to Motor
         //tx_pdo.pos_ref = hipwr_esc::J2M(tx_pdo.pos_ref,_sgn,_offset);
+        //DPRINTF ( "robot_id %d %f\n", Joint_robot_id, tx_pdo.pos_ref);
+
     }
 
     virtual int on_readSDO ( const objd_t * sdobj )  {
@@ -339,7 +341,7 @@ public :
     virtual int start ( int controller_type, const std::vector<float> &gains ) {
 
         std::ostringstream oss;
-        float actual_position;
+        float link_pos, motor_pos, actual_position;
         float actual_torque;
         uint16_t fault;
         uint32_t enable_mask = 0x0;
@@ -390,14 +392,15 @@ public :
             }
             
             // set actual position as reference
-            //readSDO_byname ( "link_pos", act_position );
-            readSDO_byname ( "motor_pos", actual_position );
+            readSDO_byname ( "link_pos", link_pos );
+            readSDO_byname ( "motor_pos", motor_pos );
+            actual_position = motor_pos;
             readSDO_byname ( "torque", actual_torque );
             writeSDO_byname ( "pos_ref", actual_position );
             writeSDO_byname ( "Max_vel", max_vel );
 
-            DPRINTF ( "%s\n\tlink_pos %f torque %f pos_ref %f\n", __PRETTY_FUNCTION__,
-                      actual_position, actual_torque,
+            DPRINTF ( "%s\n\tlink_pos %f motor_pos %f torque %f pos_ref %f\n", __PRETTY_FUNCTION__,
+                      link_pos, motor_pos, actual_torque,
                       hipwr_esc::M2J(tx_pdo.pos_ref,_sgn,_offset) );
             oss << tx_pdo;
             DPRINTF ( "\ttx_pdo %s\n", oss.str().c_str() );
@@ -654,23 +657,22 @@ inline int HpESC::read_conf ( std::string conf_key, const YAML::Node & root_cfg 
         set_flash_cmd_X ( this, FLASH_SAVE );
 
 #else        
-        std::vector<std::string> upg_par_names = std::initializer_list<std::string> {
-            "Torque_lin_coeff",
-            "Motor_Inertia", "Inv_Motor_Inertia", "Observer_Cut_Off",
-            "Inv_Geared_Torque_Constant", "Geared_Torque_Constant",
-            "Winding_Resistance", "Voltage_Feedforward", "BackEmf_Compensation"
-        };
-        float f_par;
-        int16_t i16_par;
-        readSDO_byname ( "Has_Deflection_Encoder" , i16_par );
-        DPRINTF("readSDO_byname ( %s, %d )\n", "Has_Deflection_Encoder", i16_par);
-        readSDO_byname ( "Analog_motor" , i16_par );
-        DPRINTF("readSDO_byname ( %s, %d )\n", "Analog_motor", i16_par);
-        for ( auto const par_name : upg_par_names ) {
-            readSDO_byname ( par_name.c_str(), f_par );
-            DPRINTF("readSDO_byname ( %s, %f )\n", par_name.c_str(), f_par);
-        }
-
+//         std::vector<std::string> upg_par_names = std::initializer_list<std::string> {
+//             "Torque_lin_coeff",
+//             "Motor_Inertia", "Inv_Motor_Inertia", "Observer_Cut_Off",
+//             "Inv_Geared_Torque_Constant", "Geared_Torque_Constant",
+//             "Winding_Resistance", "Voltage_Feedforward", "BackEmf_Compensation"
+//         };
+//         float f_par;
+//         int16_t i16_par;
+//         readSDO_byname ( "Has_Deflection_Encoder" , i16_par );
+//         DPRINTF("readSDO_byname ( %s, %d )\n", "Has_Deflection_Encoder", i16_par);
+//         readSDO_byname ( "Analog_motor" , i16_par );
+//         DPRINTF("readSDO_byname ( %s, %d )\n", "Analog_motor", i16_par);
+//         for ( auto const par_name : upg_par_names ) {
+//             readSDO_byname ( par_name.c_str(), f_par );
+//             DPRINTF("readSDO_byname ( %s, %f )\n", par_name.c_str(), f_par);
+//         }
 #endif        
         return EC_WRP_OK;
     }

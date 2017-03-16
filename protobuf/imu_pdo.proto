@@ -1,0 +1,25 @@
+syntax = "proto2";
+
+package iit.advr;
+
+
+message ImuVN_rx_pdo {
+    required float      x_rate = 1;       
+    required float      y_rate = 2;       
+    required float      z_rate = 3;       
+    required float      x_acc = 4;       
+    required float      y_acc = 5;       
+    required float      z_acc = 6;       
+    required float      x_quat = 7;       
+    required float      y_quat = 8;       
+    required float      z_quat = 9;       
+    required float      w_quat = 10;       
+    required uint32     imu_ts = 11;          
+    required uint32     temperature = 12;          
+    required uint32     digital_in = 13;          
+    required uint32     fault = 14;
+    required uint32     rtt = 15;  // us
+}
+
+
+

@@ -16,6 +16,7 @@
 #include <iit/ecat/ec_master_iface.h>
 #include <iit/ecat/slave_wrapper.h>
 #include <iit/ecat/advr/esc.h>
+#include <iit/ecat/advr/aux_pdo.h>
 #include <iit/ecat/advr/motor_iface.h>
 #include <iit/ecat/advr/log_esc.h>
 #include <iit/ecat/advr/pipes.h>
@@ -62,7 +63,17 @@ struct CentAcEscSdoTypes {
     float       Enc_offset;
     int         Serial_number_A;
     int         Joint_robot_id;
-
+    float       gearedMotorInertia;
+    float       motorTorqueConstant;
+    float       DOB_filterFrequencyHz;
+    float       torqueFixedOffset;
+    float       voltageFeedForward;
+    float       windingResistance;
+    float       backEmfCompensation;
+    float       directTorqueFeedbackGain;
+    float       sandBoxAngle;
+    float       sandBoxFriction;
+    
     // ram
     char        m3_fw_ver[8];
     char        c28_fw_ver[8];
@@ -77,16 +88,23 @@ struct CentAcEscSdoTypes {
     float       torque_read;
     float       board_temp;
     float       motor_temp;
+    float       maxLimitedCurr;
+    float       torqueSensTemp;
+    float       DacChA;
+    float       DacChB;
     
     // aux pdo
     float       pos_ref_fb;
     float       iq_ref_fb;
     float       iq_out_fb;
+    float       id_ref_fb;
+    float       id_out_fb;
     float       torque_no_average;
     float       torque_no_calibrated;
     float       board_temp_fb;
     float       motor_temp_fb;
     float       i_batt_fb;
+    float       iq_offset;
 
 };
 
@@ -106,7 +124,7 @@ struct BIT_FAULT {
         uint16_t  m3_fault_hardware:1;
         uint16_t  m3_params_out_of_range:1;
         uint16_t  m3_flag_2:1;
-        uint16_t  m3_flag_3:1;
+        uint16_t  m3_op_rx_pdo_fail:1;
         uint16_t  m3_link_enc_error_reading:1;
         uint16_t  m3_link_enc_hw_error:1;
         uint16_t  m3_defl_enc_error_reading:1;
@@ -121,12 +139,13 @@ struct BIT_FAULT {
         std::ostream& dump ( std::ostream& os, const std::string delim ) const {
        
             //CHECK_FAULT(os,delim, m3_rxpdo_pos_ref);
-            do { if(m3_rxpdo_pos_ref) { os << "m3_rxpdo_pos_ref" << delim;} } while(0);
+            //do { if(m3_rxpdo_pos_ref) { os << "m3_rxpdo_pos_ref" << delim;} } while(0);
             os << m3_rxpdo_pos_ref << delim;
             os << m3_rxpdo_vel_ref << delim;
             os << m3_rxpdo_tor_ref << delim;
             os << m3_fault_hardware << delim;
             os << m3_params_out_of_range << delim;
+            os << m3_op_rx_pdo_fail << delim;
             os << m3_link_enc_error_reading << delim;
             os << m3_link_enc_hw_error << delim;
             os << m3_defl_enc_error_reading << delim;
@@ -190,8 +209,9 @@ struct CentAcLogTypes {
 
 /**
 *
+* 
+* 
 **/
-
 
 class CentAcESC :
     public BasicEscWrapper<McEscPdoTypes,CentAcEscSdoTypes>,
@@ -266,11 +286,13 @@ protected :
         rx_pdo.motor_pos = centac_esc::M2J ( rx_pdo.motor_pos,_sgn,_offset );
         
         ///////////////////////////////////////////////////
-        // - pdo_aux 
-        curr_pdo_aux->on_rx(rx_pdo);
-        // if pos_ref_fb apply transformation
-        if ( curr_pdo_aux->get_idx() == 1 ) {
-            rx_pdo.aux  = centac_esc::M2J ( rx_pdo.aux,_sgn,_offset );
+        // - pdo_aux
+        if (pdo_aux_it != pdo_auxes_map.end() ) { 
+            curr_pdo_aux->on_rx(rx_pdo);
+            // if pos_ref_fb apply transformation
+            if ( ! strcmp( curr_pdo_aux->get_objd()->name, "pos_ref_fb") ) {
+                rx_pdo.aux  = centac_esc::M2J ( rx_pdo.aux,_sgn,_offset );
+            }
         }
         
         ///////////////////////////////////////////////////
@@ -307,10 +329,11 @@ protected :
         
         ///////////////////////////////////////////////////
         // pdo_aux 
-        if ( ++pdo_aux_it == pdo_auxes_map.end() ) { pdo_aux_it = pdo_auxes_map.begin(); }
-        curr_pdo_aux = &pdo_aux_it->second;
-        curr_pdo_aux->on_tx(tx_pdo);
-        
+        if (pdo_aux_it != pdo_auxes_map.end() ) { 
+            if ( ++pdo_aux_it == pdo_auxes_map.end() ) { pdo_aux_it = pdo_auxes_map.begin(); }
+            curr_pdo_aux = pdo_aux_it->second;
+            curr_pdo_aux->on_tx(tx_pdo);
+        }
         // NOOOOOOOOOOOO
         // NOT HERE !!! use set_posRef to apply transformation from Joint to Motor
         //tx_pdo.pos_ref = hipwr_esc::J2M(tx_pdo.pos_ref,_sgn,_offset);
@@ -368,27 +391,6 @@ public :
             init_SDOs();
             init_sdo_lookup();
             
-            pos_ref_fb_aux = PDO_aux(getSDObjd("pos_ref_fb"));
-            iq_ref_fb_aux = PDO_aux(getSDObjd("iq_ref_fb"));
-            iq_out_fb_aux = PDO_aux(getSDObjd("iq_out_fb"));
-            torque_no_average_aux = PDO_aux(getSDObjd("torque_no_average"));
-            torque_no_calibrated_aux = PDO_aux(getSDObjd("torque_no_calibrated"));
-            motor_temp_fb_aux = PDO_aux(getSDObjd("motor_temp_fb"));
-            board_temp_fb_aux = PDO_aux(getSDObjd("board_temp_fb"));
-            i_batt_fb_aux = PDO_aux(getSDObjd("i_batt_fb"));
-            // fill map, select which aux  
-            pdo_auxes_map["pos_ref_fb"] = pos_ref_fb_aux;
-            //pdo_auxes_map["iq_ref_fb"] = iq_ref_fb_aux;
-            //pdo_auxes_map["iq_out_fb"] = iq_out_fb_aux;
-            //pdo_auxes_map["torque_no_average"] = torque_no_average_aux;
-            //pdo_auxes_map["torque_no_calibrated"] = torque_no_calibrated_aux;
-            //pdo_auxes_map["motor_temp_fb"] = motor_temp_fb_aux;
-            //pdo_auxes_map["board_temp_fb"] = board_temp_fb_aux;
-            //pdo_auxes_map["i_batt_fb"] = i_batt_fb_aux;
-            
-            pdo_aux_it = pdo_auxes_map.begin();
-            curr_pdo_aux = &pdo_aux_it->second; //&pos_ref_fb_aux;
-            
             readSDO_byname ( "Joint_robot_id", Joint_robot_id );
             readSDO_byname ( "Serial_Number_A" );
             readSDO_byname ( "m3_fw_ver" );
@@ -419,15 +421,14 @@ public :
         }
 
         // redo read SDOs so we can apply _sgn and _offset to transform Min_pos Max_pos to Joint Coordinate
-        readSDO_byname ( "Min_pos" );
-        readSDO_byname ( "Max_pos" );
-        readSDO_byname ( "Max_vel" );
-        readSDO_byname ( "Max_tor" );
-        readSDO_byname ( "Max_cur" );
-        readSDO_byname ( "link_pos" );
-
+        auto const rd_sdos = { "Min_pos","Max_pos","Max_vel","Max_tor","Max_cur" };
+        for ( auto const sdo_name :  rd_sdos ) {
+                readSDO_byname ( sdo_name );
+        }
+       
         float max_cur = node_cfg["max_current_A"].as<float>();
         writeSDO_byname ( "Max_cur", max_cur );
+        //
 
         // set filename with robot_id
         log_filename = std::string ( "/tmp/CentAcESC_"+std::to_string ( sdo.Joint_robot_id ) +"_log.txt" );
@@ -518,6 +519,9 @@ public :
             readSDO_byname ( "fault", fault );
             handle_fault();
 
+            // set sandbox activation 
+            set_ctrl_status_X ( this, CTRL_SAND_BOX_OFF );
+            
             // set controller mode
             set_ctrl_status_X ( this, controller_type );
 
@@ -551,7 +555,6 @@ public :
                 try {
                     gains = node_cfg["pid"]["impedance"].as<std::vector<float>>();
                     assert ( gains.size() == 5 );
-                    DPRINTF ( "using yaml values\n");  
                 } catch ( std::exception &e ) {
                     DPRINTF ( "Catch Exception in %s ... %s\n", __PRETTY_FUNCTION__, e.what() );
                 }
@@ -589,11 +592,11 @@ public :
         return EC_BOARD_OK;
     }
     virtual int set_velRef ( float joint_vel ) {
-        tx_pdo.vel_ref = (int16_t)(joint_vel/1000);
+        tx_pdo.vel_ref = (int16_t)(joint_vel*1000);
         return EC_BOARD_OK;
     }
     virtual int set_torRef ( float joint_tor ) {
-        tx_pdo.tor_ref = (int16_t)(joint_tor/100);
+        tx_pdo.tor_ref = (int16_t)(joint_tor*100);
         return EC_BOARD_OK;
     }
     virtual int set_ivRef ( float joint_iv ) {
@@ -709,7 +712,61 @@ private:
         _offset = node_cfg["pos_offset"].as<float>();
         _offset = DEG2RAD ( _offset );
 
-        return EC_WRP_OK;
+        ///////////////////////////////////////////////////////////////////////
+        float upgPar, flsPar;
+        bool saveFlash = false;
+        if ( node_cfg["upd_params"] ) {
+            auto upg_params = node_cfg["upd_params"].as<std::map<std::string,float>>();
+            for ( auto const par : upg_params ) {
+                upgPar = node_cfg["upd_params"][par.first].as<float>();
+                readSDO_byname ( par.first.c_str(), flsPar );
+                DPRINTF("readSDO_byname ( %s, %f )\n", par.first.c_str(), flsPar);
+                if ( upgPar != flsPar ) {
+                    writeSDO_byname ( par.first.c_str(), upgPar );
+                    DPRINTF("writeSDO_byname ( %s, %f )\n", par.first.c_str(), upgPar);
+                    saveFlash = true;
+                }
+            }
+        }
+        if ( saveFlash ) {
+            set_flash_cmd_X ( this, FLASH_SAVE );   // ret EC_BOARD_OK 
+        }
+        ///////////////////////////////////////////////////////////////////////
+        if ( node_cfg["aux_pdo"] ) {
+            auto aux_pdo_map = node_cfg["aux_pdo"].as<std::map<std::string, std::vector<std::string>>>();
+            for ( auto const item : aux_pdo_map ) {
+                auto aux_type = item.first;
+                auto aux_set = item.second;
+                if ( aux_type == "rd" ) {
+                    for ( auto const aux_name : aux_set ) {
+                        pdo_auxes_map[aux_name] = MK_PDO_AUX(PDO_rd_aux,aux_name);
+                    }
+                } else if ( aux_type == "wr" ) {
+                    for ( auto const aux_name : aux_set ) {
+                        pdo_auxes_map[aux_name] = MK_PDO_AUX(PDO_wr_aux,aux_name);
+                    }
+                } else if ( aux_type == "wrd" ) {
+                    for ( auto const aux_name : aux_set ) {
+                        if ( aux_name.rfind("&&") ) {
+                            auto wr_name = aux_name.substr(0, aux_name.rfind("&&"));
+                            auto rd_name = aux_name.substr(aux_name.rfind("&&")+2);
+                            pdo_auxes_map[aux_name] = MK_PDO_AUX_WRD(PDO_wrd_aux,wr_name,rd_name);
+                        }
+                    }
+                } else {
+                    
+                }
+            }
+
+        }
+        DPRINTF("[PDO_aux] pdo_auxes_map size is %d\n", pdo_auxes_map.size());
+        pdo_aux_it = pdo_auxes_map.begin();
+        if (pdo_aux_it != pdo_auxes_map.end() ) { 
+            curr_pdo_aux = pdo_aux_it->second;
+        }
+        ///////////////////////////////////////////////////////////////////////
+        
+        return EC_BOARD_OK;
     }
     
     void pb_toString( std::string * pb_str , const pdo_rx_t _pdo_rx) {
@@ -750,18 +807,10 @@ private:
     
     iit::advr::Ec_slave_pdo pb_rx_pdo;
             
-    PDO_aux *   curr_pdo_aux;
-    PDO_aux     pos_ref_fb_aux;
-    PDO_aux     iq_ref_fb_aux;
-    PDO_aux     iq_out_fb_aux;
-    PDO_aux     torque_no_average_aux;
-    PDO_aux     torque_no_calibrated_aux;
-    PDO_aux     motor_temp_fb_aux;
-    PDO_aux     board_temp_fb_aux;
-    PDO_aux     i_batt_fb_aux;
-    
-    std::map<std::string,PDO_aux>           pdo_auxes_map;
-    std::map<std::string,PDO_aux>::iterator pdo_aux_it;
+    std::shared_ptr<PDO_aux>                                    curr_pdo_aux;
+    std::map<std::string,std::shared_ptr<PDO_aux>>              pdo_auxes_map;
+    std::map<std::string,std::shared_ptr<PDO_aux>>::iterator    pdo_aux_it;
+        
 };
 
 

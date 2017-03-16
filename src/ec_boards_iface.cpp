@@ -130,6 +130,12 @@ void Ec_Boards_ctrl::factory_board ( void ) {
             make_board<FootSensorESC>(i);
         }
         ///////////////////////////////////////////////////
+        // IMU VN Sensor
+        else if ( ec_slave[i].eep_id == IMU_VECTORNAV ) {
+
+            make_board<ImuVnESC>(i);
+        }
+        ///////////////////////////////////////////////////
         // Pow board
         else if ( ec_slave[i].eep_id == POW_BOARD ) {
 

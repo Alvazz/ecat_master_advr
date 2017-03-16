@@ -148,34 +148,15 @@ static const char acName8000[] = "Flash Parameter";
 static const char acName8000_0[] = "Number of Elements";
 static const char acName8000_1[] = "Block control";
 static const char acName8000_2[] = "Num Av Samples";
-static const char acName8000_3[] = "Cal offset 0";
-static const char acName8000_4[] = "Cal offset 1";
-static const char acName8000_5[] = "Cal offset 2";
-static const char acName8000_6[] = "Cal offset 3";
-static const char acName8000_7[] = "Cal offset 4";
-static const char acName8000_8[] = "Cal offset 5";
-static const char acName8000_9[] = "matrix_r1_c1";
-static const char acName8000_10[] = "matrix_r1_c2";
-static const char acName8000_11[] = "matrix_r1_c3";
-static const char acName8000_12[] = "matrix_r1_c4";
-static const char acName8000_13[] = "matrix_r1_c5";
-static const char acName8000_14[] = "matrix_r1_c6";
-static const char acName8000_15[] = "Sensor_number";
-static const char acName8000_16[] = "Sensor_robot_id";
+static const char acName8000_3[] = "ConfigFlags";
+static const char acName8000_4[] = "Sensor_number";
+static const char acName8000_5[] = "Sensor_robot_id";
 
 static const char acName8001[] = "Parameter";
 static const char acName8001_1[] = "fw_ver";
 static const char acName8001_2[] = "ack_board_faults";
-
-static const char acName8001_3[] = "Matrix c1";
-static const char acName8001_4[] = "Matrix c2";
-static const char acName8001_5[] = "Matrix c3";
-static const char acName8001_6[] = "Matrix c4";
-static const char acName8001_7[] = "Matrix c5";
-static const char acName8001_8[] = "Matrix c6";
-
-static const char acName8001_9[] = "flash_params_cmd";
-static const char acName8001_10[] = "flash_params_cmd_ack";
+static const char acName8001_3[] = "flash_params_cmd";
+static const char acName8001_4[] = "flash_params_cmd_ack";
 
 
 
@@ -318,31 +299,14 @@ static const iit::ecat::objd_t source_SDOs[] = {
     // SDO8000[] =
     {0x8000, 0x1, DTYPE_INTEGER32,     32, ATYPE_RW, acName8000_1,  0},
     {0x8000, 0x2, DTYPE_INTEGER32,     32, ATYPE_RW, acName8000_2,  0},
-    {0x8000, 0x3, DTYPE_INTEGER32,     32, ATYPE_RW, acName8000_3,  0},
-    {0x8000, 0x4, DTYPE_INTEGER32,     32, ATYPE_RW, acName8000_4,  0},
-    {0x8000, 0x5, DTYPE_INTEGER32,     32, ATYPE_RW, acName8000_5,  0},
-    {0x8000, 0x6, DTYPE_INTEGER32,     32, ATYPE_RW, acName8000_6,  0},
-    {0x8000, 0x7, DTYPE_INTEGER32,     32, ATYPE_RW, acName8000_7,  0},
-    {0x8000, 0x8, DTYPE_INTEGER32,     32, ATYPE_RW, acName8000_8,  0},
-    {0x8000, 0x9, DTYPE_REAL32,        32, ATYPE_RW, acName8000_9,  0},
-    {0x8000, 0xa, DTYPE_REAL32,        32, ATYPE_RW, acName8000_10, 0},
-    {0x8000, 0xb, DTYPE_REAL32,        32, ATYPE_RW, acName8000_11, 0},
-    {0x8000, 0xc, DTYPE_REAL32,        32, ATYPE_RW, acName8000_12, 0},
-    {0x8000, 0xd, DTYPE_REAL32,        32, ATYPE_RW, acName8000_13, 0},
-    {0x8000, 0xe, DTYPE_REAL32,        32, ATYPE_RW, acName8000_14, 0},
-    {0x8000, 0xf,  DTYPE_INTEGER16,    16, ATYPE_RW, acName8000_15, 0},
-    {0x8000, 0x10, DTYPE_INTEGER16,    16, ATYPE_RW, acName8000_16, 0},
+    {0x8000, 0x3, DTYPE_INTEGER16,     16, ATYPE_RW, acName8000_3,  0},
+    {0x8000, 0x4, DTYPE_INTEGER16,     16, ATYPE_RW, acName8000_4,  0},
+    {0x8000, 0x5, DTYPE_INTEGER16,     16, ATYPE_RW, acName8000_5,  0},
     // SDO8001[] =
     {0x8001, 0x1, DTYPE_VISIBLE_STRING,   64, ATYPE_RO, acName8001_1, 0},
     {0x8001, 0x2, DTYPE_INTEGER16,        16, ATYPE_RW, acName8001_2, 0},
-    {0x8001, 0x3, DTYPE_REAL32,           32, ATYPE_RW, acName8001_3, 0},
-    {0x8001, 0x4, DTYPE_REAL32,           32, ATYPE_RW, acName8001_4, 0},
-    {0x8001, 0x5, DTYPE_REAL32,           32, ATYPE_RW, acName8001_5, 0},
-    {0x8001, 0x6, DTYPE_REAL32,           32, ATYPE_RW, acName8001_6, 0},
-    {0x8001, 0x7, DTYPE_REAL32,           32, ATYPE_RW, acName8001_7, 0},
-    {0x8001, 0x8, DTYPE_REAL32,           32, ATYPE_RW, acName8001_8, 0},
-    {0x8001, 0x9, DTYPE_UNSIGNED16,        16, ATYPE_RW, acName8001_9, 0},
-    {0x8001, 0xa, DTYPE_UNSIGNED16,        16, ATYPE_RO, acName8001_10, 0},
+    {0x8001, 0x9, DTYPE_UNSIGNED16,        16, ATYPE_RW, acName8001_3, 0},
+    {0x8001, 0xa, DTYPE_UNSIGNED16,        16, ATYPE_RO, acName8001_4, 0},
 
     {0, 0, 0, 0, 0, 0, 0 }
 };
@@ -369,29 +333,12 @@ void FootSensorESC::init_SDOs ( void ) {
     // 0x8000
     SDOs[i++].data = ( void* ) &FootSensorESC::sdo.Block_control;
     SDOs[i++].data = ( void* ) &FootSensorESC::sdo.NumAvSamples;
-    SDOs[i++].data = ( void* ) &FootSensorESC::sdo.calibration_offset0;
-    SDOs[i++].data = ( void* ) &FootSensorESC::sdo.calibration_offset1;
-    SDOs[i++].data = ( void* ) &FootSensorESC::sdo.calibration_offset2;
-    SDOs[i++].data = ( void* ) &FootSensorESC::sdo.calibration_offset3;
-    SDOs[i++].data = ( void* ) &FootSensorESC::sdo.calibration_offset4;
-    SDOs[i++].data = ( void* ) &FootSensorESC::sdo.calibration_offset5;
-    SDOs[i++].data = ( void* ) &FootSensorESC::sdo.matrix_r1_c1;
-    SDOs[i++].data = ( void* ) &FootSensorESC::sdo.matrix_r1_c2;
-    SDOs[i++].data = ( void* ) &FootSensorESC::sdo.matrix_r1_c3;
-    SDOs[i++].data = ( void* ) &FootSensorESC::sdo.matrix_r1_c4;
-    SDOs[i++].data = ( void* ) &FootSensorESC::sdo.matrix_r1_c5;
-    SDOs[i++].data = ( void* ) &FootSensorESC::sdo.matrix_r1_c6;
+    SDOs[i++].data = ( void* ) &FootSensorESC::sdo.ConfigFlags;
     SDOs[i++].data = ( void* ) &FootSensorESC::sdo.sensor_number;
     SDOs[i++].data = ( void* ) &FootSensorESC::sdo.sensor_robot_id;
     // 0x8001
     SDOs[i++].data = ( void* ) &FootSensorESC::sdo.firmware_version;
     SDOs[i++].data = ( void* ) &FootSensorESC::sdo.ack_board_fault;
-    SDOs[i++].data = ( void* ) &FootSensorESC::sdo.matrix_rn_c1;
-    SDOs[i++].data = ( void* ) &FootSensorESC::sdo.matrix_rn_c2;
-    SDOs[i++].data = ( void* ) &FootSensorESC::sdo.matrix_rn_c3;
-    SDOs[i++].data = ( void* ) &FootSensorESC::sdo.matrix_rn_c4;
-    SDOs[i++].data = ( void* ) &FootSensorESC::sdo.matrix_rn_c5;
-    SDOs[i++].data = ( void* ) &FootSensorESC::sdo.matrix_rn_c6;
     SDOs[i++].data = ( void* ) &FootSensorESC::sdo.flash_params_cmd;
     SDOs[i++].data = ( void* ) &FootSensorESC::sdo.flash_params_cmd_ack;
 

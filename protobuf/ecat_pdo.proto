@@ -7,6 +7,7 @@ import "motor_pdo.proto";
 import "ft6_pdo.proto";
 import "power_pack_pdo.proto";
 import "foot_sens_pdo.proto";
+import "imu_pdo.proto";
 
 message Ec_slave_pdo {
 
@@ -18,6 +19,7 @@ message Ec_slave_pdo {
         RX_XT_MOTOR = 9;    TX_XT_MOTOR = 10;
         RX_FOOT_SENS = 11;  TX_FOOT_SENS = 12;
         RX_MC_HAND = 13;    TX_MC_HAND = 14;
+        RX_IMU_VN = 15;     TX_IMU_VN = 16;
         
     }
 
@@ -39,6 +41,7 @@ message Ec_slave_pdo {
     optional PowWalkman_rx_pdo  powWalkman_rx_pdo = 12;
     optional FootWalkman_rx_pdo footWalkman_rx_pdo = 13;
     optional McHand_rx_pdo      mcHand_rx_pdo = 14;
+    optional ImuVN_rx_pdo       imuVN_rx_pdo = 15;
 
 }
 

@@ -21,34 +21,36 @@
 
 
 // Control commands
-#define CTRL_POWER_MOD_ON		0x00A5
-#define CTRL_POWER_MOD_OFF		0x005A
+#define CTRL_POWER_MOD_ON       0x00A5
+#define CTRL_POWER_MOD_OFF      0x005A
 
 #define CTRL_SET_DIRECT_MODE    0x004F
 
-#define CTRL_SET_IMPED_MODE		0x00D4
-#define CTRL_SET_POS_MODE		0x003B
+#define CTRL_SET_IMPED_MODE     0x00D4
+#define CTRL_SET_POS_MODE       0x003B
 #define CTRL_SET_POS_LINK_MODE  0x003C
 #define CTRL_SET_VEL_MODE       0x0037
 #define CTRL_SET_VOLT_MODE      0x0039
 #define CTRL_SET_CURR_MODE      0x00CC
 
-#define CTRL_SET_MIX_POS_MODE	0x003C
-#define CTRL_SET_MIX_POS_MODE_2	0x003D
-#define CTRL_SET_POS_MOT_MODE	0x005C
-#define CTRL_SET_POS_LNK_MODE	0x005D
-#define CTRL_SET_POS_LNK_ERR	0x005E
+#define CTRL_SET_MIX_POS_MODE   0x003C
+#define CTRL_SET_MIX_POS_MODE_2 0x003D
+#define CTRL_SET_POS_MOT_MODE   0x005C
+#define CTRL_SET_POS_LNK_MODE   0x005D
+#define CTRL_SET_POS_LNK_ERR    0x005E
 
-#define CTRL_FAN_ON		Arizina, Oregon		0x0026
-#define CTRL_FAN_OFF			0x0062
-#define CTRL_LED_ON				0x0019
-#define CTRL_LED_OFF			0x0091
+#define CTRL_FAN_ON             0x0026
+#define CTRL_FAN_OFF            0x0062
+#define CTRL_LED_ON             0x0019
+#define CTRL_LED_OFF            0x0091
+#define CTRL_SAND_BOX_ON        0x0079
+#define CTRL_SAND_BOX_OFF       0x0097
 
 //#define CTRL_ALIGN_ENCODERS		0x00B2
-#define CTRL_SET_ZERO_POSITION	0x00AB
+#define CTRL_SET_ZERO_POSITION  0x00AB
 
 // FT6
-#define CTRL_REMOVE_TORQUE_OFFS	0x00CD
+#define CTRL_REMOVE_TORQUE_OFFS 0x00CD
 
 #define FLASH_SAVE              0x0012
 
@@ -75,6 +77,7 @@ enum Board_type : uint16_t {
     FOOT_SENSOR     = 0x21,
     POW_BOARD       = 0x30,
     POW_CMN_BOARD   = 0x31,
+    IMU_VECTORNAV   = 0x40,
     HUB             = 0x100,
     HUB_IO          = 0x101,
     EC_TEST         = 1234,
@@ -303,7 +306,7 @@ struct McEscPdoTypes {
         int16_t      link_vel;          // mrad/s 
         int16_t      motor_vel;         // mrad/s
         float        torque;            // Nm
-        uint16_t     temperature;       // C
+        uint16_t     temperature;       // C (motor_temp<<8)|board_temp
         uint16_t     fault;
         uint16_t     rtt;               // us
         uint16_t     op_idx_ack;        // op [ack/nack] , idx
@@ -315,7 +318,8 @@ struct McEscPdoTypes {
             os << (float)link_vel/1000 << delim;
             os << (float)motor_vel/1000 << delim;
             os << torque << delim;
-            os << temperature << delim;
+            os << ((temperature>>8)&0xFF) << delim;
+            os << (temperature&0xFF) << delim;
             os << fault << delim;
             os << rtt << delim;
             os << op_idx_ack << delim;
@@ -339,7 +343,8 @@ struct McEscPdoTypes {
             JPDO ( (float)link_vel/1000 );
             JPDO ( (float)motor_vel/1000 );
             JPDO ( torque );
-            JPDO ( temperature );
+            JPDO ( (temperature>>8)&0xFF );
+            JPDO ( temperature&0xFF );
             JPDO ( fault );
             JPDO ( rtt );
             JPDO ( op_idx_ack );
@@ -361,6 +366,8 @@ struct McEscPdoTypes {
             pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_motor_vel((float)motor_vel/1000);
             pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_torque(torque);
             pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_temperature(temperature);
+            pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_motor_temp((temperature>>8)&0xFF);
+            pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_board_temp(temperature&0xFF);
             pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_fault(fault);
             pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_rtt(rtt);
             pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_op_idx_ack(op_idx_ack);
@@ -393,57 +400,6 @@ inline std::ostream& operator<< (std::ostream& os, const McEscPdoTypes::pdo_tx& 
 inline std::ostream& operator<< (std::ostream& os, const McEscPdoTypes::pdo_rx& rx_pdo ) {
     return rx_pdo.dump(os,"\t");
 }
-
-
-class PDO_aux {
-public:
-    PDO_aux(): sdo_objd(NULL) {}
-    PDO_aux( const objd_t * sdo_obj_data ): sdo_objd( sdo_obj_data ) {}
-    PDO_aux( const PDO_aux& rhs ): sdo_objd( rhs.sdo_objd ) {}
-    //
-    // these template methods expect [rx/tx]_pdo struct with op_idx_aux/op_idx_ack and aux fields
-    // 
-    template<class T>
-    int on_tx( T& tx_pdo ) {
-        if ( sdo_objd == 0 ) return -1;
-        if ( sdo_objd->access == ATYPE_RW ) { 
-            // set op
-            tx_pdo.op_idx_aux = 0xFB << 8 | sdo_objd->subindex & 0xFF;
-            tx_pdo.aux = *(float*)sdo_objd->data;
-        } else {
-            // get op
-            tx_pdo.op_idx_aux = 0xBF << 8 | sdo_objd->subindex & 0xFF;
-        }
-        //DPRINTF("PDO_aux 0x%04X\n", tx_pdo.op_idx_aux);
-        return 0;
-    };
-    
-    template<class T>
-    int on_rx( T& rx_pdo) {
-        static uint64_t prev_err_ts;
-        if ( sdo_objd == 0 ) return -1;
-        // check nack
-        if ( (rx_pdo.op_idx_ack >> 8) == 0xEE ) {
-            DPRINTF("Fail PDO_aux reason 0x%02X\n", (uint32_t)rx_pdo.aux);
-            return -1;
-        }
-        // check idx
-        if ( (rx_pdo.op_idx_ack & 0xFF) != sdo_objd->subindex ) {
-            DPRINTF("[dt err %ld\trtt %d] Fail PDO_aux idx %d != %d\n", get_time_ns()-prev_err_ts, rx_pdo.rtt, sdo_objd->subindex, rx_pdo.op_idx_ack & 0xFF );
-            prev_err_ts = get_time_ns();
-            return -1;
-        }
-        
-        *(float*)sdo_objd->data = rx_pdo.aux;
-        return 0;
-    }
-    
-    int get_idx(void) { return (sdo_objd == 0) ? 0 : sdo_objd->subindex; }
-    
-private:
-    const objd_t *  sdo_objd; 
-};
-
 
 
 inline int check_cmd_ack ( uint16_t cmd, uint16_t ack ) {

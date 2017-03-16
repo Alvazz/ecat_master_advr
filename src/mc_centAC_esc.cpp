@@ -64,32 +64,49 @@ static const iit::ecat::objd_t source_SDOs[] = {
     { 0x8000, 0xd,  DTYPE_REAL32,      32, ATYPE_RW,    "Enc_offset",           0},
     { 0x8000, 0xe,  DTYPE_INTEGER16,   16, ATYPE_RW,    "Serial_Number_A",      0},
     { 0x8000, 0xf,  DTYPE_INTEGER16,   16, ATYPE_RW,    "Joint_robot_id",       0},
+    { 0x8000, 0x10, DTYPE_REAL32,      32, ATYPE_RW,    "gearedMotorInertia",   0},
+    { 0x8000, 0x11, DTYPE_REAL32,      32, ATYPE_RW,    "motorTorqueConstant",  0},
+    { 0x8000, 0x12, DTYPE_REAL32,      32, ATYPE_RW,    "DOB_filterFrequencyHz",0},
+    { 0x8000, 0x13, DTYPE_REAL32,      32, ATYPE_RW,    "torqueFixedOffset",    0},
+    { 0x8000, 0x14, DTYPE_REAL32,      32, ATYPE_RW,    "voltageFeedforward",   0},
+    { 0x8000, 0x15, DTYPE_REAL32,      32, ATYPE_RW,    "windingResistance",    0},
+    { 0x8000, 0x16, DTYPE_REAL32,      32, ATYPE_RW,    "backEmfCompensation",  0},
+    { 0x8000, 0x17, DTYPE_REAL32,      32, ATYPE_RW,    "directTorqueFeedbackGain",0},
+    { 0x8000, 0x18, DTYPE_REAL32,      32, ATYPE_RW,    "sandBoxAngle",         0},
+    { 0x8000, 0x19, DTYPE_REAL32,      32, ATYPE_RW,    "sandBoxFriction",      0},
     
 
     // SD0 0x8001
-    { 0x8001, 0x1, DTYPE_VISIBLE_STRING,   64, ATYPE_RO, "m3_fw_ver" ,          0},
-    { 0x8001, 0x2, DTYPE_VISIBLE_STRING,   64, ATYPE_RO, "c28_fw_ver",          0},
-    { 0x8001, 0x3, DTYPE_UNSIGNED16,       16, ATYPE_RW, "ctrl_status_cmd"  ,   0},
-    { 0x8001, 0x4, DTYPE_UNSIGNED16,       16, ATYPE_RO, "ctrl_status_cmd_ack", 0},
-    { 0x8001, 0x5, DTYPE_UNSIGNED16,       16, ATYPE_RW, "flash_params_cmd",    0},
-    { 0x8001, 0x6, DTYPE_UNSIGNED16,       16, ATYPE_RO, "flash_params_cmd_ack",0},
-    { 0x8001, 0x7, DTYPE_REAL32,           32, ATYPE_RW, "Direct_ref",          0},
-    { 0x8001, 0x8, DTYPE_UNSIGNED16,       16, ATYPE_RO, "fault",               0},
-    { 0x8001, 0x9, DTYPE_REAL32,           32, ATYPE_RO, "v_batt",              0},
-    { 0x8001, 0xa, DTYPE_REAL32,           32, ATYPE_RO, "i_batt",              0},
-    { 0x8001, 0xb, DTYPE_REAL32,           32, ATYPE_RO, "torque_read",         0},
-    { 0x8001, 0xc, DTYPE_REAL32,           32, ATYPE_RO, "board_temp",          0},
-    { 0x8001, 0xd, DTYPE_REAL32,           32, ATYPE_RO, "motor_temp",          0},
+    { 0x8001, 0x1,  DTYPE_VISIBLE_STRING,   64, ATYPE_RO, "m3_fw_ver" ,         0},
+    { 0x8001, 0x2,  DTYPE_VISIBLE_STRING,   64, ATYPE_RO, "c28_fw_ver",         0},
+    { 0x8001, 0x3,  DTYPE_UNSIGNED16,       16, ATYPE_RW, "ctrl_status_cmd"  ,  0},
+    { 0x8001, 0x4,  DTYPE_UNSIGNED16,       16, ATYPE_RO, "ctrl_status_cmd_ack",0},
+    { 0x8001, 0x5,  DTYPE_UNSIGNED16,       16, ATYPE_RW, "flash_params_cmd",   0},
+    { 0x8001, 0x6,  DTYPE_UNSIGNED16,       16, ATYPE_RO, "flash_params_cmd_ack",0},
+    { 0x8001, 0x7,  DTYPE_REAL32,           32, ATYPE_RW, "Direct_ref",         0},
+    { 0x8001, 0x8,  DTYPE_UNSIGNED16,       16, ATYPE_RO, "fault",              0},
+    { 0x8001, 0x9,  DTYPE_REAL32,           32, ATYPE_RO, "v_batt",             0},
+    { 0x8001, 0xa,  DTYPE_REAL32,           32, ATYPE_RO, "i_batt",             0},
+    { 0x8001, 0xb,  DTYPE_REAL32,           32, ATYPE_RO, "torque_read",        0},
+    { 0x8001, 0xc,  DTYPE_REAL32,           32, ATYPE_RO, "board_temp",         0},
+    { 0x8001, 0xd,  DTYPE_REAL32,           32, ATYPE_RO, "motor_temp",         0},
+    { 0x8001, 0xe,  DTYPE_REAL32,           32, ATYPE_RO, "maxLimitedCurr",     0},
+    { 0x8001, 0xf,  DTYPE_REAL32,           32, ATYPE_RO, "torqueSensTemp",     0},
+    { 0x8001, 0x10, DTYPE_UNSIGNED16,       16, ATYPE_RW, "DacChA",             0},
+    { 0x8001, 0x11, DTYPE_UNSIGNED16,       16, ATYPE_RW, "DacChB",             0},
 
     // SD0 0x8002
-    { 0x8002, 1, DTYPE_REAL32,      32, ATYPE_RO, "pos_ref_fb",                 0},
-    { 0x8002, 2, DTYPE_REAL32,      32, ATYPE_RO, "iq_ref_fb",                  0},
-    { 0x8002, 3, DTYPE_REAL32,      32, ATYPE_RO, "iq_out_fb",                  0},
-    { 0x8002, 4, DTYPE_REAL32,      32, ATYPE_RO, "torque_no_average",          0},
-    { 0x8002, 5, DTYPE_REAL32,      32, ATYPE_RO, "torque_no_calibrated",       0},
-    { 0x8002, 6, DTYPE_REAL32,      32, ATYPE_RO, "board_temp_fb",              0},
-    { 0x8002, 7, DTYPE_REAL32,      32, ATYPE_RO, "motor_temp_fb",              0},
-    { 0x8002, 8, DTYPE_REAL32,      32, ATYPE_RO, "i_batt_fb",                  0},
+    { 0x8002, 0x1, DTYPE_REAL32,      32, ATYPE_RO, "pos_ref_fb",               0},
+    { 0x8002, 0x2, DTYPE_REAL32,      32, ATYPE_RO, "iq_ref_fb",                0},
+    { 0x8002, 0x3, DTYPE_REAL32,      32, ATYPE_RO, "iq_out_fb",                0},
+    { 0x8002, 0x4, DTYPE_REAL32,      32, ATYPE_RO, "id_ref_fb",                0},
+    { 0x8002, 0x5, DTYPE_REAL32,      32, ATYPE_RO, "id_out_fb",                0},
+    { 0x8002, 0x6, DTYPE_REAL32,      32, ATYPE_RO, "torque_no_average",        0},
+    { 0x8002, 0x7, DTYPE_REAL32,      32, ATYPE_RO, "torque_no_calibrated",     0},
+    { 0x8002, 0x8, DTYPE_REAL32,      32, ATYPE_RO, "board_temp_fb",            0},
+    { 0x8002, 0x9, DTYPE_REAL32,      32, ATYPE_RO, "motor_temp_fb",            0},
+    { 0x8002, 0xa, DTYPE_REAL32,      32, ATYPE_RO, "i_batt_fb",                0},
+    { 0x8002, 0xb, DTYPE_REAL32,      32, ATYPE_RW, "iq_offset",                0},
 
     {0, 0, 0, 0, 0, 0, 0 }
 
@@ -148,6 +165,16 @@ void CentAcESC::init_SDOs ( void ) {
     SDOs[i++].data = ( void* ) &CentAcESC::sdo.Enc_offset;
     SDOs[i++].data = ( void* ) &CentAcESC::sdo.Serial_number_A;
     SDOs[i++].data = ( void* ) &CentAcESC::sdo.Joint_robot_id;
+    SDOs[i++].data = ( void* ) &CentAcESC::sdo.gearedMotorInertia;
+    SDOs[i++].data = ( void* ) &CentAcESC::sdo.motorTorqueConstant;
+    SDOs[i++].data = ( void* ) &CentAcESC::sdo.DOB_filterFrequencyHz;
+    SDOs[i++].data = ( void* ) &CentAcESC::sdo.torqueFixedOffset;
+    SDOs[i++].data = ( void* ) &CentAcESC::sdo.voltageFeedForward;
+    SDOs[i++].data = ( void* ) &CentAcESC::sdo.windingResistance;
+    SDOs[i++].data = ( void* ) &CentAcESC::sdo.backEmfCompensation;
+    SDOs[i++].data = ( void* ) &CentAcESC::sdo.directTorqueFeedbackGain;
+    SDOs[i++].data = ( void* ) &CentAcESC::sdo.sandBoxAngle;
+    SDOs[i++].data = ( void* ) &CentAcESC::sdo.sandBoxFriction;
     
     // 0x8001
     SDOs[i++].data = ( void* ) &CentAcESC::sdo.m3_fw_ver;
@@ -163,16 +190,23 @@ void CentAcESC::init_SDOs ( void ) {
     SDOs[i++].data = ( void* ) &CentAcESC::sdo.torque_read;
     SDOs[i++].data = ( void* ) &CentAcESC::sdo.board_temp;
     SDOs[i++].data = ( void* ) &CentAcESC::sdo.motor_temp;
+    SDOs[i++].data = ( void* ) &CentAcESC::sdo.maxLimitedCurr;
+    SDOs[i++].data = ( void* ) &CentAcESC::sdo.torqueSensTemp;
+    SDOs[i++].data = ( void* ) &CentAcESC::sdo.DacChA;
+    SDOs[i++].data = ( void* ) &CentAcESC::sdo.DacChB;
     
     // 0x8002
     SDOs[i++].data = ( void* ) &CentAcESC::sdo.pos_ref_fb;
     SDOs[i++].data = ( void* ) &CentAcESC::sdo.iq_ref_fb;
     SDOs[i++].data = ( void* ) &CentAcESC::sdo.iq_out_fb;
+    SDOs[i++].data = ( void* ) &CentAcESC::sdo.id_ref_fb;
+    SDOs[i++].data = ( void* ) &CentAcESC::sdo.id_out_fb;
     SDOs[i++].data = ( void* ) &CentAcESC::sdo.torque_no_average;
     SDOs[i++].data = ( void* ) &CentAcESC::sdo.torque_no_calibrated;
     SDOs[i++].data = ( void* ) &CentAcESC::sdo.board_temp_fb;
     SDOs[i++].data = ( void* ) &CentAcESC::sdo.motor_temp_fb;
     SDOs[i++].data = ( void* ) &CentAcESC::sdo.i_batt_fb;
+    SDOs[i++].data = ( void* ) &CentAcESC::sdo.iq_offset;
     
     // end marker
     SDOs[i++].data = 0;
