@@ -580,7 +580,9 @@ public :
         fault.all = rx_pdo.fault;
         fault_log.push_back(fault.bit);
         //DPRINTF("[%d]fault 0x%04X\n", Joint_robot_id, fault.all );
-        //fault.bit.
+        if ( fault.bit.m3_op_rx_pdo_fail ) {
+            DPRINTF("fault.bit.m3_op_rx_pdo_fail \t [%d]fault 0x%04X\n", Joint_robot_id, fault.all );
+        }
         tx_pdo.fault_ack = fault.all & 0x7FFF;
     }
 
