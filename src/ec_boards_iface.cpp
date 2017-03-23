@@ -372,20 +372,7 @@ int Ec_Boards_ctrl::recv_from_slaves ( ec_timing_t &timing ) {
 
 int Ec_Boards_ctrl::send_to_slaves() {
 
-    int ret, retry = 3;
-
-    wr_LOCK();
-    ret = iit::ecat::send_to_slaves();
-    wr_UNLOCK();
-    while ( ret <= 0  && retry ) {
-        DPRINTF ( "iit::ecat::send_to_slaves fails ... retry %d\n", retry );
-        wr_LOCK();
-        ret = iit::ecat::send_to_slaves();
-        wr_UNLOCK();
-        retry--;
-    }
-
-    return ret;
+    return iit::ecat::send_to_slaves();
 }
 
 
@@ -436,11 +423,16 @@ int Ec_Boards_ctrl::update_board_firmware ( uint16_t slave_pos, std::string firm
             ( s->get_ESC_type() == CENT_AC ) )
         {
             // pre-update
-            // POW_OFF+RESET 0x2
-            if ( esc_gpio_ll_wr ( configadr, 0x2 ) <= 0 ) {
+            // POW_OFF 0x0
+            if ( esc_gpio_ll_wr ( configadr, 0x0 ) <= 0 ) {
                 return 0;
             }
             sleep ( 1 );
+            // todo POW_ON+BOOT+RESET 0x7
+            if ( esc_gpio_ll_wr ( configadr, 0x7 ) <= 0 ) {
+                return 0;
+            }
+            usleep ( 300000 );
             // todo POW_ON+BOOT 0x5
             if ( esc_gpio_ll_wr ( configadr, 0x5 ) <= 0 ) {
                 return 0;
@@ -524,11 +516,16 @@ int Ec_Boards_ctrl::update_board_firmware ( uint16_t slave_pos, std::string firm
 
     if ( s ) {
         // post-update ... restore
-        // POW_OFF+RESET 0x2
-        if ( esc_gpio_ll_wr ( configadr, 0x2 ) <= 0 ) {
+        // POW_OFF 0x0
+        if ( esc_gpio_ll_wr ( configadr, 0x0 ) <= 0 ) {
             return 0;
         }
         sleep ( 3 );
+        // POW_ON+RESET 0x3
+        if ( esc_gpio_ll_wr ( configadr, 0x3 ) <= 0 ) {
+            return 0;
+        }
+        usleep ( 300000 );
         // POW_ON 0x1
         if ( esc_gpio_ll_wr ( configadr, 0x1 ) <= 0 ) {
             return 0;
