@@ -520,7 +520,7 @@ public :
             handle_fault();
 
             // set sandbox activation 
-            set_ctrl_status_X ( this, CTRL_SAND_BOX_OFF );
+            set_ctrl_status_X ( this, CTRL_SAND_BOX_ON );
             
             // set controller mode
             set_ctrl_status_X ( this, controller_type );
