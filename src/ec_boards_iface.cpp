@@ -427,7 +427,7 @@ int Ec_Boards_ctrl::update_board_firmware ( uint16_t slave_pos, std::string firm
             if ( esc_gpio_ll_wr ( configadr, 0x0 ) <= 0 ) {
                 return 0;
             }
-            sleep ( 1 );
+            sleep ( 2 );
             // todo POW_ON+BOOT+RESET 0x7
             if ( esc_gpio_ll_wr ( configadr, 0x7 ) <= 0 ) {
                 return 0;
@@ -437,7 +437,7 @@ int Ec_Boards_ctrl::update_board_firmware ( uint16_t slave_pos, std::string firm
             if ( esc_gpio_ll_wr ( configadr, 0x5 ) <= 0 ) {
                 return 0;
             }
-            sleep ( 3 );
+            sleep ( 2 );
 
         } else {
             DPRINTF ( "Slave %d is NOT a XL or a MD motor\n", slave_pos );
