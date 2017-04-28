@@ -305,20 +305,21 @@ public:
                 curr_pdo_aux = pdo_aux_it->second;
             }
 
+            uint16_t status_cmd = 0xF0;
+            readSDO_byname  ( std::string("fw_ver") );
+            writeSDO_byname ( std::string("ctrl_status_cmd"), status_cmd );
+            readSDO_byname  ( std::string("ctrl_status_cmd_ack"), status_cmd );
+
         } catch ( EscWrpError &e ) {
 
             DPRINTF ( "Catch Exception %s ... %s\n", __FUNCTION__, e.what() );
-            return EC_BOARD_INIT_SDO_FAIL;
+            return EC_BOARD_INIT_SDO_FAIL;              
         } catch ( std::exception &e ) {
 
             DPRINTF ( "Exception %s ... %s\n", __FUNCTION__, e.what() );
             return EC_WRP_NOK;
         }
 
-        uint16_t status_cmd = 0xF0;
-        readSDO_byname  ( std::string("fw_ver") );
-        writeSDO_byname ( std::string("ctrl_status_cmd"), status_cmd );
-        readSDO_byname  ( std::string("ctrl_status_cmd_ack"), status_cmd );
         
         // Should be better to start logging when enter OP ....
         start_log ( true );
