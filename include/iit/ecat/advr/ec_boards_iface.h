@@ -450,7 +450,7 @@ inline void Ec_Boards_ctrl::rd_UNLOCK ( void ) {
 
 inline void Ec_Boards_ctrl::wr_LOCK ( void ) {
 #ifdef __XENO__
-    pthread_mutex_lock ( &rd_mtx );
+    pthread_mutex_lock ( &wr_mtx );
 #else
     std::unique_lock<std::mutex> ( wr_mtx );
 #endif
