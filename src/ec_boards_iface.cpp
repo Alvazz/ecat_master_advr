@@ -142,6 +142,12 @@ void Ec_Boards_ctrl::factory_board ( void ) {
             make_board<PowESC>(i);
         }
         ///////////////////////////////////////////////////
+        // Pow F28M36 board
+        else if ( ec_slave[i].eep_id == POW_F28M36_BOARD ) {
+
+            make_board<PowF28M36ESC>(i);
+        }
+        ///////////////////////////////////////////////////
         // Pow coman board
         else if ( ec_slave[i].eep_id == POW_CMN_BOARD ) {
 
@@ -418,6 +424,7 @@ int Ec_Boards_ctrl::update_board_firmware ( uint16_t slave_pos, std::string firm
     // check slave type ... HiPwr uses ET1100 GPIO to force/release bootloader
     if ( s ) {
         if (( s->get_ESC_type() == POW_BOARD ) ||
+            ( s->get_ESC_type() == POW_F28M36_BOARD ) ||
             ( s->get_ESC_type() == HI_PWR_AC_MC ) ||
             ( s->get_ESC_type() == HI_PWR_DC_MC ) ||
             ( s->get_ESC_type() == CENT_AC ) )
@@ -460,6 +467,7 @@ int Ec_Boards_ctrl::update_board_firmware ( uint16_t slave_pos, std::string firm
 
     if ( s ) {
         if (( s->get_ESC_type() == POW_BOARD ) ||
+            ( s->get_ESC_type() == POW_F28M36_BOARD ) ||
             ( s->get_ESC_type() == HI_PWR_AC_MC ) ||
             ( s->get_ESC_type() == HI_PWR_DC_MC ) ||
             ( s->get_ESC_type() == CENT_AC ) )

@@ -40,6 +40,7 @@ set(LIB_SOURCES
     src/mc_lowpwr_esc.cpp
     src/mc_hand_esc.cpp
     src/power_board.cpp
+    src/power_f28m36_board.cpp
     src/power_coman_board.cpp
     src/ft6_esc.cpp
     src/foot_sensor_esc.cpp

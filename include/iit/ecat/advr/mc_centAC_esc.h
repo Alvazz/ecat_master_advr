@@ -61,8 +61,8 @@ struct CentAcEscSdoTypes {
     float       Joint_Max_pos;
     float       Calibration_angle;
     float       Enc_offset;
-    int         Serial_number_A;
-    int         Joint_robot_id;
+    int16_t     Serial_number_A;
+    int16_t     Joint_robot_id;
     float       gearedMotorInertia;
     float       motorTorqueConstant;
     float       DOB_filterFrequencyHz;

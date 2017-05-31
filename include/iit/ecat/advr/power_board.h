@@ -20,25 +20,6 @@ namespace iit {
 namespace ecat {
 namespace advr {
 
-// master_command
-#define CTRL_FAN_1_ON           0x0026
-#define CTRL_FAN_1_OFF          0x0062
-#define CTRL_FAN_2_ON           0x0027
-#define CTRL_FAN_2_OFF          0x0072
-#define CTRL_POWER_MOTORS_ON    0x0048
-#define CTRL_POWER_MOTORS_OFF   0x0084
-#define CTRL_POWER_ROBOT_OFF    0x00DD
-
-
-// Run State machine states definition
-#define RUN_INIT_FSM                        0
-#define RUN_POWER_CPU_RELAY                 1
-#define RUN_POWER_MOTOR_RELAYS_FSM          2
-#define RUN_WAIT_POWER_MOTORS_COMMAND_FSM   3
-#define RUN_LOOP_FSM                        4
-#define RUN_POWER_ROBOT_OFF_FSM             5
-
-
 struct status_bits {
     uint16_t  key_status:1;
     uint16_t  vsc_status:1;
@@ -179,7 +160,9 @@ public:
         return POW_BOARD;
     }
 
-    void print_info ( void ) { return; }
+    void print_info ( void ) {
+        DPRINTF ( "\tfw_ver %s\n", std::string((const char *)sdo.firmware_version,8).c_str() );
+    }
 
     void init_SDOs ( void );
 
