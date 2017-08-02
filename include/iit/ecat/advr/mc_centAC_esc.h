@@ -246,7 +246,8 @@ public:
 
     void print_info ( void ) {
 
-        DPRINTF ( "\tJoint serial# %d\tJoint robot id %d\n", sdo.Serial_number_A, sdo.Joint_robot_id );
+        DPRINTF ( "\tJoint serial# %d\tJoint robot id %d\tHW conf 0x%04X\n",
+                  sdo.Serial_number_A, sdo.Joint_robot_id, sdo.Hardware_configuration );
         DPRINTF ( "\tmin pos %f\tmax pos %f\n", sdo.Joint_Min_pos, sdo.Joint_Max_pos );
         DPRINTF ( "\tfw_ver m3 %s\tc28 %s\n",
                   std::string((const char *)sdo.m3_fw_ver,8).c_str(),
@@ -384,15 +385,20 @@ public :
 
     virtual int init ( const YAML::Node & root_cfg ) {
 
-        Joint_robot_id = -1;
-
+        std::string robot_name("void");
+        try {
+            robot_name = root_cfg["ec_boards_base"]["robot_name"].as<std::string>();
+        } catch ( YAML::Exception &e ) {
+        }
+        
         try {
             // !! sgn and offset must set before init_sdo_lookup !!
             init_SDOs();
             init_sdo_lookup();
             
-            readSDO_byname ( "Joint_robot_id", Joint_robot_id );
+            readSDO_byname ( "Joint_robot_id" );
             readSDO_byname ( "Serial_Number_A" );
+            readSDO_byname ( "Hardware_config" );
             readSDO_byname ( "m3_fw_ver" );
             readSDO_byname ( "c28_fw_ver" );
 
@@ -402,13 +408,13 @@ public :
             return EC_BOARD_INIT_SDO_FAIL;
         }
 
-        if ( Joint_robot_id > 0 ) {
+        if ( sdo.Joint_robot_id > 0 ) {
             try {
-                std::string esc_conf_key = std::string ( "CentAcESC_"+std::to_string ( Joint_robot_id ) );
+                std::string esc_conf_key = std::string ( "CentAcESC_"+std::to_string ( sdo.Joint_robot_id ) );
                 if ( read_conf ( esc_conf_key, root_cfg ) != EC_WRP_OK ) {
                     esc_conf_key = std::string ( "CentAcESC_X" );
                     if ( read_conf ( esc_conf_key, root_cfg ) != EC_WRP_OK ) {
-                        DPRINTF ( "NO config for CentAcESC_%d in %s\n", Joint_robot_id, __PRETTY_FUNCTION__ );
+                        DPRINTF ( "NO config for CentAcESC_%d in %s\n", sdo.Joint_robot_id, __PRETTY_FUNCTION__ );
                         return EC_BOARD_KEY_NOT_FOUND;
                     }
                 }
@@ -442,7 +448,7 @@ public :
         // we log when receive PDOs
         start_log ( true );
 
-        XDDP_pipe::init ("Motor_id_"+std::to_string ( sdo.Joint_robot_id ) );
+        XDDP_pipe::init (robot_name+"@Motor_id_"+std::to_string ( sdo.Joint_robot_id ) );
         
         return EC_BOARD_OK;
 
@@ -462,7 +468,7 @@ public :
         //float gain;
         
         DPRINTF ( "Start motor[%d] 0x%02X\n",
-                  Joint_robot_id, controller_type);
+                  sdo.Joint_robot_id, controller_type);
 
         try {
             set_ctrl_status_X ( this, CTRL_POWER_MOD_OFF );
@@ -581,7 +587,7 @@ public :
         fault_log.push_back(fault.bit);
         //DPRINTF("[%d]fault 0x%04X\n", Joint_robot_id, fault.all );
         if ( fault.bit.m3_op_rx_pdo_fail ) {
-            DPRINTF("fault.bit.m3_op_rx_pdo_fail \t [%d]fault 0x%04X\n", Joint_robot_id, fault.all );
+            DPRINTF("fault.bit.m3_op_rx_pdo_fail \t [%d]fault 0x%04X\n", sdo.Joint_robot_id, fault.all );
         }
         tx_pdo.fault_ack = fault.all & 0x7FFF;
     }
@@ -644,11 +650,11 @@ public :
                 }
 
                 writeSDO_byname ( "pos_ref", tx_pos_ref );
-                DPRINTF("%d move to %f %f %f\n", Joint_robot_id, pos_ref, tx_pos_ref, pos);
+                DPRINTF("%d move to %f %f %f\n", sdo.Joint_robot_id, pos_ref, tx_pos_ref, pos);
                 return 0;
 
             } else {
-                DPRINTF ( "%d move to %f %f %f\n", Joint_robot_id, pos_ref, tx_pos_ref, pos );
+                DPRINTF ( "%d move to %f %f %f\n", sdo.Joint_robot_id, pos_ref, tx_pos_ref, pos );
                 return 1;
 
             }
@@ -793,8 +799,6 @@ private:
             pb_rx_pdo.SerializeToString(pb_str);
         }
 
-
-    int16_t Joint_robot_id;
 
     YAML::Node node_cfg;
 
