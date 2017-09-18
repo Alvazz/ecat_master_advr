@@ -22,16 +22,23 @@ namespace advr {
 
 namespace pow_f28m36 {
 struct status_bits {
-    uint16_t  key_status:1;
-    uint16_t  vsc_status:1;
-    uint16_t  cpu_rel_status:1;
-    uint16_t  prech_rel_status:1;
-    uint16_t  main_rel_status:1;
-    uint16_t  fan_1_status:1;
-    uint16_t  fan_2_status:1;
-    uint16_t  spare:1;
-    uint16_t  state_machine_status:8;
-};
+    uint16_t  m3_fan_1_status:1;
+    uint16_t  m3_fan_2_status:1;
+    uint16_t  m3_spare_1:1;
+    uint16_t  m3_spare_2:1;
+
+    uint16_t  c28_key_status:1;
+    uint16_t  c28_emr_sw_status:1;
+    uint16_t  c28_pow_12V_status:1;
+    uint16_t  c28_pow_19V_status:1;
+    uint16_t  c28_pow_24V_status:1;
+    uint16_t  c28_prech_rel_status:1;
+    uint16_t  c28_main_rel_status:1;
+    uint16_t  c28_spare_1:1;
+    uint16_t  c28_spare_2:1;
+    uint16_t  c28_spare_3:1;
+    uint16_t  c28_spare_4:1;
+    uint16_t  c28_spare_5:1;};
 
 typedef union {
     uint16_t all;
@@ -50,19 +57,20 @@ struct PowF28M36EscPdoTypes {
 
     // RX  slave_output -- master input
     struct pdo_rx {
+        uint16_t    v_batt;
+        uint16_t    v_load;
+        int16_t     i_load;
+        uint16_t    temp_pcb;
+        uint16_t    temp_heatsink;
+        uint16_t    temp_batt;
         pow_f28m36::status_t    status;
-        uint16_t    board_temp;         // °C
-        uint16_t    battery_temp;       // °C
-        uint16_t    battery_volt;       // V
-        int16_t     battery_curr;       // A
-        int16_t     load_curr;          // A
         uint16_t    fault;
         uint16_t    rtt;                // us
         int sprint ( char *buff, size_t size ) {
-            return snprintf ( buff, size, "0x%02X\t%d\t%d\t%d", status.all,board_temp,board_temp,rtt );
+            return snprintf ( buff, size, "0x%02X\t%d\t%d\t%d\t%d", status.all,temp_pcb,temp_heatsink,temp_batt,rtt );
         }
         void fprint ( FILE *fp ) {
-            fprintf ( fp, "0x%02X\t%d\t%d\t%d", status.all,board_temp,board_temp,rtt );
+            fprintf ( fp, "0x%02X\t%d\t%d\t%d\t%d", status.all,temp_pcb,temp_heatsink,temp_batt,rtt );
         }
         void to_map ( jmap_t & jpdo ) {
             JPDO ( status.all );
@@ -79,11 +87,6 @@ struct PowF28M36EscPdoTypes {
             pb_rx_pdo.set_type(iit::advr::Ec_slave_pdo::RX_POW_WLK);
             // PowWalkman_tx_pdo
             pb_rx_pdo.mutable_powwalkman_rx_pdo()->set_status(status.all);
-            pb_rx_pdo.mutable_powwalkman_rx_pdo()->set_temperature(board_temp);
-            pb_rx_pdo.mutable_powwalkman_rx_pdo()->set_batt_temp(battery_temp);
-            pb_rx_pdo.mutable_powwalkman_rx_pdo()->set_batt_volt(battery_volt);
-            pb_rx_pdo.mutable_powwalkman_rx_pdo()->set_batt_curr(battery_curr);
-            pb_rx_pdo.mutable_powwalkman_rx_pdo()->set_load_curr(load_curr);
             pb_rx_pdo.mutable_powwalkman_rx_pdo()->set_fault(fault);
             pb_rx_pdo.mutable_powwalkman_rx_pdo()->set_rtt(rtt);
             pb_rx_pdo.SerializeToString(pb_str);
@@ -104,15 +107,15 @@ struct PowF28M36EscSdoTypes {
     uint16_t    ctrl_status_cmd_ack;
     uint16_t    flash_params_cmd;
     uint16_t    flash_params_cmd_ack;
-    uint16_t    v_pack_adc;
-    uint16_t    v_batt_adc;
-    uint16_t    i_batt_adc;
-    uint16_t    i_load_adc;
-    uint16_t    t_batt_adc;
-    uint16_t    t_board_adc;
+    float       v_batt;
+    float       v_load;
+    float       i_load;
+    float       t_board;
+    float       t_heat;
+    float       t_batt;
+    uint16_t    board_status;
+    uint16_t    board_fault;
     uint16_t    FSM;
-    float       v_batt_filt;
-    float       v_pack_filt;
 };
 
 struct PowF28M36LogTypes {
@@ -232,14 +235,14 @@ inline int PowF28M36ESC::init ( const YAML::Node & root_cfg ) {
     
     osal_timer_start ( &motor_on_timer, 0 );
     try {
-        power_on_ok();
+        //power_on_ok();
     } catch ( EscWrpError &e ) {
         DPRINTF ( "Catch Exception in %s ... %s\n", __PRETTY_FUNCTION__, e.what() );
         return EC_BOARD_NOK;
     }
         
-    //set_ctrl_status_X ( this, CTRL_FAN_1_ON );
-    //set_ctrl_status_X ( this, CTRL_FAN_2_ON );
+    set_ctrl_status_X ( this, CTRL_FAN_1_ON );
+    set_ctrl_status_X ( this, CTRL_FAN_2_ON );
 
     return EC_BOARD_OK;
 }
@@ -248,40 +251,13 @@ inline void PowF28M36ESC::handle_status ( void ) {
 
     static pow_f28m36::status_t status;
 
-    if ( rx_pdo.status.bit.key_status != status.bit.key_status ) {
-        // parking and shutdown
-        if ( rx_pdo.status.bit.key_status ) {
-            DPRINTF ( "KEY ON\n" );
-        } else {
-            DPRINTF ( "KEY OFF\n" );
-        }
-    }
-
-    if ( rx_pdo.status.bit.vsc_status != status.bit.vsc_status ) {
-        // red button
-        if ( rx_pdo.status.bit.vsc_status ) {
-            DPRINTF ( "VCS ON press \n" );
-        } else {
-            DPRINTF ( "VCS OFF release\n" );
-        }
-    }
-
-    if ( osal_timer_is_expired ( &motor_on_timer ) ) {
-        if ( rx_pdo.status.bit.state_machine_status == RUN_WAIT_POWER_MOTORS_COMMAND_FSM ) {
-            //
-            set_ctrl_status_X ( this, CTRL_POWER_MOTORS_ON );
-            // set 5 sec to check again
-            osal_timer_start ( &motor_on_timer, 5000000 );
-        }
-    }
-
     status.all = rx_pdo.status.all;
 }
 
 inline int PowF28M36ESC::power_on_ok ( void ) {
     readSDO_byname ( "status" );
     handle_status();
-    return rx_pdo.status.bit.main_rel_status == 1;
+    return rx_pdo.status.bit.c28_main_rel_status == 1;
 }
 
 

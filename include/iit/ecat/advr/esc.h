@@ -99,7 +99,11 @@ enum Board_type : uint16_t {
     IMU_VECTORNAV   = 0x40,
     HUB             = 0x100,
     HUB_IO          = 0x101,
-    EC_TEST         = 1234,
+//  DO NOT GO ABOVE    
+    TEST_MASK       = 0x800,
+    TIVA_TEST       = 0x801,
+    TIVA_HUB_TEST   = 0x802,
+    F28M36_TEST     = 0x803,
 };
 
 

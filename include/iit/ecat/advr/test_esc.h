@@ -283,7 +283,7 @@ public:
     virtual void init_SDOs ( void );
     
     virtual uint16_t get_ESC_type() {
-        return EC_TEST;
+        return product_code;
     }
 
     virtual int init ( const YAML::Node & root_cfg ) {

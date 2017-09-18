@@ -95,7 +95,7 @@ void Ec_Boards_ctrl::factory_board ( void ) {
         ///////////////////////////////////////////////////
         // BigMotor and MediumMotor
         if ( ec_slave[i].eep_id == HI_PWR_AC_MC ||
-                ec_slave[i].eep_id == HI_PWR_DC_MC ) {
+             ec_slave[i].eep_id == HI_PWR_DC_MC ) {
             
             make_board<HpESC>(i);
         }
@@ -164,7 +164,7 @@ void Ec_Boards_ctrl::factory_board ( void ) {
         }
         ///////////////////////////////////////////////////
         // Test
-        else if ( ec_slave[i].eep_id == EC_TEST ) {
+        else if ( ec_slave[i].eep_id & TEST_MASK  ) {
 
             make_board<TestESC>(i);
         }

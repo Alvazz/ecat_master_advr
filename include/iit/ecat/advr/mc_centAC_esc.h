@@ -234,9 +234,9 @@ public:
 
     virtual ~CentAcESC ( void ) {
 
-        delete [] SDOs;
-        DPRINTF ( "~%s pos %d\n", typeid ( this ).name(), position );
+        DPRINTF ( "~%s id %d pos %d\n", typeid ( this ).name(), sdo.Joint_robot_id, position );
         print_stat ( s_rtt );
+        delete [] SDOs;
     }
 
     virtual int16_t get_robot_id() {
@@ -767,7 +767,7 @@ private:
             }
 
         }
-        DPRINTF("[PDO_aux] pdo_auxes_map size is %d\n", pdo_auxes_map.size());
+        DPRINTF("[PDO_aux] pdo_auxes_map size is %lu\n", pdo_auxes_map.size());
         pdo_aux_it = pdo_auxes_map.begin();
         if (pdo_aux_it != pdo_auxes_map.end() ) { 
             curr_pdo_aux = pdo_aux_it->second;
