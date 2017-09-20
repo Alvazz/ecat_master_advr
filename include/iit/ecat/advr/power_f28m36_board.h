@@ -163,16 +163,15 @@ public:
     virtual void on_writePDO ( void );
     virtual const objd_t * get_SDOs();
     virtual uint16_t get_ESC_type();
+    virtual void init_SDOs ( void );
     
     void print_info ( void );
-    void init_SDOs ( void );
     int init ( const YAML::Node & root_cfg );
     void handle_status ( void );
     int power_on_ok ( void );
 
 private:
 
-    osal_timer  motor_on_timer;
     YAML::Node node_cfg;
     objd_t * SDOs;
     stat_t  s_rtt;
@@ -233,9 +232,8 @@ inline int PowF28M36ESC::init ( const YAML::Node & root_cfg ) {
 
     XDDP_pipe::init( "PowF28M36ESC_pos_"+std::to_string ( position ) );
     
-    osal_timer_start ( &motor_on_timer, 0 );
     try {
-        //power_on_ok();
+        power_on_ok();
     } catch ( EscWrpError &e ) {
         DPRINTF ( "Catch Exception in %s ... %s\n", __PRETTY_FUNCTION__, e.what() );
         return EC_BOARD_NOK;

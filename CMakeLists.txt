@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(walkman-ecat)
+project(ecat_master)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 include(MacroOptionalBuild)
@@ -25,7 +25,7 @@ add_subdirectory(protobuf)
 ## libwalkman_master
 #######################
 
-set(LIB_NAME walkman_master${LIB_TYPE})
+set(LIB_NAME ecat_master${LIB_TYPE})
 add_definitions(-DKEEP_POWER_ON)
 
 include_directories(include)
@@ -44,6 +44,7 @@ set(LIB_SOURCES
     src/power_coman_board.cpp
     src/ft6_esc.cpp
     src/foot_sensor_esc.cpp
+    src/skin_sensor_esc.cpp
     src/imu_Vn_esc.cpp
     src/test_esc.cpp
 )
@@ -55,11 +56,11 @@ if ( Xenomai_FOUND )
 endif()
 
 
-add_library(walkman_master${LIB_TYPE} SHARED
+add_library(ecat_master${LIB_TYPE} SHARED
     ${LIB_SOURCES} ${RT_LIB_SOURCES}
 )
 
-add_dependencies(walkman_master${LIB_TYPE} pdo_pb)
+add_dependencies(ecat_master${LIB_TYPE} pdo_pb)
 
 if ( Xenomai_FOUND )
     set_xeno_flags(${LIB_NAME})

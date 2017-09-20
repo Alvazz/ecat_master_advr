@@ -21,7 +21,9 @@
 #include <map>
 #include <iostream>
 
-#define SENSOR_NUMBER 128
+#define SENSOR_NUMBER 16*8
+//#define SENSOR_NUMBER 10*5
+//#define SENSOR_NUMBER  8*8
 
 namespace iit {
 namespace ecat {
