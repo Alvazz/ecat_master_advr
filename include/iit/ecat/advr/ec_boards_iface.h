@@ -23,6 +23,7 @@
 #include <iit/ecat/advr/mc_centAC_esc.h>
 #include <iit/ecat/advr/ft6_esc.h>
 #include <iit/ecat/advr/foot_sensor_esc.h>
+#include <iit/ecat/advr/skin_sensor_esc.h>
 #include <iit/ecat/advr/hub_esc.h>
 #include <iit/ecat/advr/power_board.h>
 #include <iit/ecat/advr/power_f28m36_board.h>
@@ -167,18 +168,7 @@ public:
     inline int get_number_of_boards() {
         return slaves.size();
     };
-
-    /**
-     * @brief
-     *
-     * @param sPos
-     * @param cmd
-     * @return int
-     */
-    int set_ctrl_status ( uint16_t sPos, int16_t cmd );
-    int set_flash_cmd ( uint16_t sPos, int16_t cmd );
-    int set_cal_matrix ( uint16_t sPos, std::vector<std::vector<float>> &cal_matrix );
-
+ 
     /**
      * @brief Checks if temperature and currents in the boards are fine
      *

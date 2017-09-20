@@ -130,6 +130,12 @@ void Ec_Boards_ctrl::factory_board ( void ) {
             make_board<FootSensorESC>(i);
         }
         ///////////////////////////////////////////////////
+        // Skin Sensor
+        else if ( ec_slave[i].eep_id == SKIN_SENSOR ) {
+
+            make_board<SkinSensorESC>(i);
+        }
+        ///////////////////////////////////////////////////
         // IMU VN Sensor
         else if ( ec_slave[i].eep_id == IMU_VECTORNAV ) {
 
@@ -212,60 +218,6 @@ void Ec_Boards_ctrl::stop_motors ( void ) {
         }
     }
 }
-
-/**
- *  TODO: change to McESC objects !!!!
- */
-int Ec_Boards_ctrl::set_ctrl_status ( uint16_t sPos, int16_t cmd ) {
-
-    HpESC * hp = slave_as_HP ( sPos );
-    if ( hp ) {
-        return set_ctrl_status_X ( hp, cmd );
-    }
-
-    LpESC * lp = slave_as_LP ( sPos );
-    if ( lp ) {
-        return set_ctrl_status_X ( lp, cmd );
-    }
-
-    return EC_WRP_NOK;
-}
-
-/**
- *  TODO: change to McESC objects !!!!
- */
-int Ec_Boards_ctrl::set_flash_cmd ( uint16_t sPos, int16_t cmd ) {
-
-    HpESC * hp = slave_as_HP ( sPos );
-    if ( hp ) {
-        return set_flash_cmd_X ( hp, cmd );
-    }
-
-    LpESC * lp = slave_as_LP ( sPos );
-    if ( lp ) {
-        return set_flash_cmd_X ( lp, cmd );
-    }
-
-    Ft6ESC * ft = slave_as_FT ( sPos );
-    if ( ft ) {
-        return set_flash_cmd_X ( ft, cmd );
-    }
-
-    return EC_WRP_NOK;
-}
-
-
-int Ec_Boards_ctrl::set_cal_matrix ( uint16_t sPos, std::vector<std::vector<float>> &cal_matrix ) {
-
-    Ft6ESC * ft = slave_as_FT ( sPos );
-    if ( ft ) {
-        return ft->set_cal_matrix ( cal_matrix );
-    }
-
-    return 0;
-}
-
-
 
 /**
  *  TODO: change to McESC objects !!!!

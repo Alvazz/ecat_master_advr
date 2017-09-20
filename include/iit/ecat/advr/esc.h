@@ -93,6 +93,7 @@ enum Board_type : uint16_t {
     CENT_AC         = 0x15,
     FT6             = 0x20,
     FOOT_SENSOR     = 0x21,
+    SKIN_SENSOR     = 0x22,
     POW_BOARD       = 0x30,
     POW_CMN_BOARD   = 0x31,
     POW_F28M36_BOARD= 0x32,
