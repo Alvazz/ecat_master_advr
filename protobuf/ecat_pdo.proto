@@ -8,6 +8,7 @@ import "ft6_pdo.proto";
 import "power_pack_pdo.proto";
 import "foot_sens_pdo.proto";
 import "imu_pdo.proto";
+import "skin_sens_pdo.proto";
 
 message Ec_slave_pdo {
 
@@ -20,6 +21,7 @@ message Ec_slave_pdo {
         RX_FOOT_SENS = 11;  TX_FOOT_SENS = 12;
         RX_MC_HAND = 13;    TX_MC_HAND = 14;
         RX_IMU_VN = 15;     TX_IMU_VN = 16;
+        RX_SKIN_SENS = 17;  TX_SKIN_SENS = 18;
         
     }
 
@@ -42,6 +44,7 @@ message Ec_slave_pdo {
     optional FootWalkman_rx_pdo footWalkman_rx_pdo = 13;
     optional McHand_rx_pdo      mcHand_rx_pdo = 14;
     optional ImuVN_rx_pdo       imuVN_rx_pdo = 15;
+    optional Skin_rx_pdo        skin_rx_pdo = 16;
 
 }
 

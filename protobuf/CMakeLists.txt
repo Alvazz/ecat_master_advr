@@ -25,6 +25,7 @@ set(msgs
   ft6_pdo.proto
   power_pack_pdo.proto
   foot_sens_pdo.proto
+  skin_sens_pdo.proto
   ecat_pdo.proto
   header.proto
   time.proto

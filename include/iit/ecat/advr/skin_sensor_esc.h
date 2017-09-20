@@ -1,5 +1,5 @@
 /*
- * skin_send_esc.h
+ * skin_sensor_esc.h
  *
  *  based on TI TM4C123x - Tiva Microcontroller MCUs
  *  
@@ -78,7 +78,11 @@ struct SkinSensorEscPdoTypes {
             pb_rx_pdo.mutable_header()->mutable_stamp()->set_sec(ts.tv_sec);
             pb_rx_pdo.mutable_header()->mutable_stamp()->set_nsec(ts.tv_nsec);
             // Type
-            //pb_rx_pdo.set_type(iit::advr::Ec_slave_pdo::RX_SKIN_SENS);
+            pb_rx_pdo.set_type(iit::advr::Ec_slave_pdo::RX_SKIN_SENS);
+            //
+            pb_rx_pdo.mutable_skin_rx_pdo()->set_fault(fault);
+            pb_rx_pdo.mutable_skin_rx_pdo()->set_rtt(rtt);
+            for (int i=0; i<SKIN_SENSOR_NUMBER; i++) { pb_rx_pdo.mutable_skin_rx_pdo()->add_forcexy((unsigned)forceXY[i]); }
             pb_rx_pdo.SerializeToString(pb_str);
         }
 
@@ -214,6 +218,12 @@ inline void SkinSensorESC::print_info ( void ) {
 
 inline int SkinSensorESC::init ( const YAML::Node & root_cfg ) {
 
+    std::string robot_name("void");
+    try {
+        robot_name = root_cfg["ec_boards_base"]["robot_name"].as<std::string>();
+    } catch ( YAML::Exception &e ) {
+    }
+
     try {
         init_SDOs();
         init_sdo_lookup(true);
@@ -232,7 +242,7 @@ inline int SkinSensorESC::init ( const YAML::Node & root_cfg ) {
     // we log when receive PDOs
     Log::start_log ( true );
 
-    XDDP_pipe::init ( "Skin_id_"+std::to_string ( get_robot_id() ) );
+    XDDP_pipe::init (robot_name+"@Skin_id_"+std::to_string ( get_robot_id() ) );
         
     return EC_BOARD_OK;
 
