@@ -19,6 +19,11 @@
 
 #define DEG2RAD(X)  ((float)X*M_PI)/180.0
 
+// ET1100 gpio
+#define GPIO_PW_OFF 0x0
+#define GPIO_PW_ON  0x1
+#define GPIO_RESET  0x2
+#define GPIO_BOOT   0x4
 
 // Control commands
 #define CTRL_POWER_MOD_ON       0x00A5
@@ -107,6 +112,8 @@ enum Board_type : uint16_t {
     F28M36_TEST     = 0x803,
 };
 
+const std::set<uint16_t> esc_F28M36_uc_set = { CENT_AC, POW_F28M36_BOARD, F28M36_TEST };
+const std::set<uint16_t> esc_gpio_boot_set = { CENT_AC, POW_F28M36_BOARD, HI_PWR_AC_MC, HI_PWR_DC_MC, POW_BOARD };
 
 /* Possible error codes returned */
 enum ec_board_ctrl_err: int {
@@ -381,7 +388,6 @@ struct McEscPdoTypes {
             // Header
             pb_rx_pdo.mutable_header()->mutable_stamp()->set_sec(ts.tv_sec);
             pb_rx_pdo.mutable_header()->mutable_stamp()->set_nsec(ts.tv_nsec);
-            // Type
             pb_rx_pdo.set_type(iit::advr::Ec_slave_pdo::RX_XT_MOTOR);
             // Motor_xt_tx_pdo
             pb_rx_pdo.mutable_motor_xt_rx_pdo()->set_link_pos(link_pos);

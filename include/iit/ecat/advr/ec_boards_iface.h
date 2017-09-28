@@ -169,14 +169,6 @@ public:
         return slaves.size();
     };
  
-    /**
-     * @brief Checks if temperature and currents in the boards are fine
-     *
-     * @return int
-     */
-    int check_sanity ( uint16_t sPos );
-    void check_DataLayer ( void );
-
     void start_motors ( int );
     void stop_motors ( void );
     /**
@@ -185,6 +177,8 @@ public:
      * @return int
      */
     int update_board_firmware ( uint16_t slave_pos, std::string firmware, uint32_t passwd_firm, const std::string mcu_info );
+
+    int upload_flash ( uint16_t slave_pos, std::string bin_file, uint32_t bin_passwd, uint32_t size_byte, std::string save_as );
 
     EscWrapper * slave_as_EscWrapper ( uint16_t sPos ) {
         return ( slaves.find ( sPos ) != slaves.end() ) ? slaves[sPos].get() : NULL;
