@@ -87,7 +87,7 @@ namespace advr {
 
 
 // ecat slave product code see xml conf
-enum Board_type : uint16_t {
+enum Board_type : uint32_t {
     NO_TYPE         = 0,
     HI_PWR_AC_MC    = 0x10,
     HI_PWR_DC_MC    = 0x11,
@@ -105,15 +105,17 @@ enum Board_type : uint16_t {
     IMU_VECTORNAV   = 0x40,
     HUB             = 0x100,
     HUB_IO          = 0x101,
+//
+    LXM32I          = 0x00016E72,
 //  DO NOT GO ABOVE    
-    TEST_MASK       = 0x800,
-    TIVA_TEST       = 0x801,
-    TIVA_HUB_TEST   = 0x802,
-    F28M36_TEST     = 0x803,
+    TEST_MASK       = 0x80000000,
+    TIVA_TEST       = 0x80000001,
+    TIVA_HUB_TEST   = 0x80000002,
+    F28M36_TEST     = 0x80000003,
 };
 
-const std::set<uint16_t> esc_F28M36_uc_set = { CENT_AC, POW_F28M36_BOARD, F28M36_TEST };
-const std::set<uint16_t> esc_gpio_boot_set = { CENT_AC, POW_F28M36_BOARD, HI_PWR_AC_MC, HI_PWR_DC_MC, POW_BOARD };
+const std::set<uint32_t> esc_F28M36_uc_set = { CENT_AC, POW_F28M36_BOARD, F28M36_TEST };
+const std::set<uint32_t> esc_gpio_boot_set = { CENT_AC, POW_F28M36_BOARD, HI_PWR_AC_MC, HI_PWR_DC_MC, POW_BOARD };
 
 /* Possible error codes returned */
 enum ec_board_ctrl_err: int {

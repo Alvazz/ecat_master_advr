@@ -156,7 +156,7 @@ public:
     virtual void on_readPDO ( void );
     virtual void on_writePDO ( void );
     virtual const objd_t * get_SDOs( void );
-    virtual uint16_t get_ESC_type( void );
+    virtual uint32_t get_ESC_type( void );
     virtual void init_SDOs ( void );
     
     int16_t get_robot_id( void );
@@ -174,7 +174,7 @@ private:
 inline const objd_t * SkinSensorESC::get_SDOs() {
     return SDOs;
 }
-inline uint16_t SkinSensorESC::get_ESC_type() {
+inline uint32_t SkinSensorESC::get_ESC_type() {
     return SKIN_SENSOR;
 }
 inline void SkinSensorESC::on_writePDO ( void ) {
