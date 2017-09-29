@@ -29,6 +29,7 @@
 #include <iit/ecat/advr/power_f28m36_board.h>
 #include <iit/ecat/advr/power_coman_board.h>
 #include <iit/ecat/advr/imu_Vn_esc.h>
+#include <iit/ecat/advr/lxm32i_esc.h>
 
 #include <string>
 #include <mutex>
