@@ -145,7 +145,7 @@ public:
         return SDOs;
     }
     virtual void init_SDOs ( void );
-    virtual uint16_t get_ESC_type() {
+    virtual uint32_t get_ESC_type() {
         return FOOT_SENSOR;
     }
 

@@ -265,7 +265,7 @@ public :
     /// Motor method implementation
     ///
     ///////////////////////////////////////////////////////
-    virtual uint16_t get_ESC_type() {
+    virtual uint32_t get_ESC_type() {
         if ( product_code == HI_PWR_AC_MC ) return HI_PWR_AC_MC;
         if ( product_code == HI_PWR_DC_MC ) return HI_PWR_DC_MC;
         return NO_TYPE;
