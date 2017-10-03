@@ -184,7 +184,7 @@ public:
     virtual const objd_t * get_SDOs() 	{
         return SDOs;
     }
-    virtual uint16_t get_ESC_type ( void ) {
+    virtual uint32_t get_ESC_type ( void ) {
         return POW_CMN_BOARD;
     }
 

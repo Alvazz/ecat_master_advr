@@ -175,6 +175,12 @@ void Ec_Boards_ctrl::factory_board ( void ) {
             make_board<TestESC>(i);
         }
         ///////////////////////////////////////////////////
+        // Test
+        else if ( ec_slave[i].eep_id = LXM32I  ) {
+
+            make_board<LXM32iESC>(i);
+        }
+        ///////////////////////////////////////////////////
         else {
 
             DPRINTF ( "Warning product code %d not handled !!!\n", ec_slave[i].eep_id );

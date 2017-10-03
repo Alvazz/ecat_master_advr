@@ -47,6 +47,7 @@ set(LIB_SOURCES
     src/skin_sensor_esc.cpp
     src/imu_Vn_esc.cpp
     src/test_esc.cpp
+    src/lxm32i_esc.cpp
 )
 
 if ( Xenomai_FOUND )
