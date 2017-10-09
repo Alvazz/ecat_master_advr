@@ -201,25 +201,6 @@ int Ec_Boards_ctrl::configure_boards ( void ) {
 
 }
 
-void Ec_Boards_ctrl::start_motors ( int control_type ) {
-    for ( auto it = rid2pos.begin(); it != rid2pos.end(); it++ ) {
-        Motor * moto = slave_as_Motor ( it->second );
-        if ( moto ) {
-            moto->start ( control_type );
-        }
-    }
-}
-
-void Ec_Boards_ctrl::stop_motors ( void ) {
-    for ( auto it = rid2pos.begin(); it != rid2pos.end(); it++ ) {
-        Motor * moto = slave_as_Motor ( it->second );
-        if ( moto ) {
-            moto->stop();
-        }
-    }
-}
-
-
 int Ec_Boards_ctrl::set_operative ( void ) {
 
     expected_wkc = iit::ecat::operational ( sync_cycle_time_ns, sync_cycle_offset_ns );
