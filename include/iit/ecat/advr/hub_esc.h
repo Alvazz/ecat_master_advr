@@ -38,7 +38,7 @@ public:
     virtual const objd_t * get_SDOs() {
         return 0;
     }
-    virtual uint16_t get_ESC_type() {
+    virtual uint32_t get_ESC_type() {
         return HUB;
     }
 
@@ -60,7 +60,7 @@ public:
     HubIoESC ( const ec_slavet& slave_descriptor ) :
         HubESC ( slave_descriptor ) { }
 
-    virtual uint16_t get_ESC_type() {
+    virtual uint32_t get_ESC_type() {
         return HUB_IO;
     }
 

@@ -199,7 +199,7 @@ public:
         print_stat ( s_rtt );
     }
 
-    virtual uint16_t get_ESC_type() {
+    virtual uint32_t get_ESC_type() {
         return LO_PWR_HAND_MC;
     }
 

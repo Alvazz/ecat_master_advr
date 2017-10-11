@@ -162,7 +162,7 @@ public:
     virtual void on_readPDO ( void );
     virtual void on_writePDO ( void );
     virtual const objd_t * get_SDOs();
-    virtual uint16_t get_ESC_type();
+    virtual uint32_t get_ESC_type();
     virtual void init_SDOs ( void );
     
     void print_info ( void );
@@ -211,7 +211,7 @@ inline const objd_t * PowF28M36ESC::get_SDOs() {
     return SDOs;
 }
 
-inline uint16_t PowF28M36ESC::get_ESC_type() {
+inline uint32_t PowF28M36ESC::get_ESC_type() {
     return POW_F28M36_BOARD;
 }
 
