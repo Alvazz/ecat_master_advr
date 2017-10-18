@@ -5,7 +5,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 include(MacroOptionalBuild)
 include(MacroSetcap)
 
-set(CMAKE_CXX_FLAGS     "${CMAKE_CXX_FLAGS} -std=c++11 -O3")
+set(CMAKE_CXX_FLAGS     "${CMAKE_CXX_FLAGS} -std=c++14 -O3")
 set(ENABLE_XENO         CACHE BOOL "OFF")
 set(SOEM_ROOT           $ENV{SOEM_ROOT} CACHE PATH "Base path of the SOEM headers")
 
