@@ -52,9 +52,12 @@ _MK_STR(RAMP_v_dec);
 _MK_STR(ScalePOSdenom);
 _MK_STR(ScalePOSnum);
 
+_MK_STR(HMmethod);
+_MK_STR(HMp_setP);
+
 
 std::vector<std::string> const wr_pdos = { DCOMcontrol, DCOMopmode, PPp_target, PVv_target, PTtq_target, IO_DQ_set, JOGactivate };
-std::vector<std::string> const wr_sdos = { PPv_target, RAMP_v_acc, RAMP_v_dec};
+std::vector<std::string> const wr_sdos = { PPv_target, RAMP_v_acc, RAMP_v_dec, HMmethod, HMp_setP};
 
 _MK_STR(RxPdoMapCnt);
 _MK_STR(RxPdoMap);
@@ -326,6 +329,9 @@ struct LXM32iEscSdoTypes {
     int32_t     ScalePOSdenom;
     int32_t     ScalePOSnum;
     
+    int8_t      HMmethod;
+    int32_t     HMp_setP;
+    
    std::ostream& dump ( std::ostream& os, const std::string delim ) const {
        os << "struct LXM32iEscSdoTypes : ";
        os << (int)rxPdoMapCnt << delim;
@@ -335,7 +341,8 @@ struct LXM32iEscSdoTypes {
        os << PPv_target << delim;
        os << RAMP_v_acc << delim;
        os << RAMP_v_dec << delim;
-       
+       os << HMmethod << delim;
+       os << HMmethod << delim;
     }
 
 };
@@ -357,9 +364,10 @@ static struct LXM32iEscSdoTypes yifu_pdomap = {
     { 0x60410010, 0x60610008, 0x60640020, 0x60F40020, 0x60770010, 0x603F0010, 0x30080110, 0 },
     //
     2500, 50000, 50000,
-    //
-    32768, 1
-        
+    // denom num
+    32768, 1,
+    // homing
+    35, 0,
 };
 
 
@@ -434,18 +442,25 @@ public:
     int init ( const YAML::Node & root_cfg );
     void handle_fault ( void );
 
-    void test_motor( void );
+    template<class C>
+    int user_loop( C &c );
 
-    std::vector<int32_t> set_points; 
-
+    int32_t set_pos_target( int32_t pos );
     
 private:
-    stat_t  s_rtt;
-    objd_t * SDOs;
-    
+    stat_t      s_rtt;
+    objd_t *    SDOs;
+  
+    pdo_rx_t    prev_rx_pdo;
+    std::vector<int32_t> set_points; 
+    std::vector<int32_t>::iterator sp_it;
+    int32_t     sign_dir;
+    int32_t     mmXturn;
+    std::string op_mode;
 };
 
 /*
+ *
  * 
  */
 
@@ -476,7 +491,7 @@ inline void LXM32iESC::on_readPDO ( void ) {
 
 inline int16_t LXM32iESC::get_robot_id() {
     //return sdo.sensor_robot_id;
-    return 1;
+    return position;
 }
 
 inline void LXM32iESC::print_info ( void ) {
@@ -492,15 +507,24 @@ inline int LXM32iESC::init ( const YAML::Node & root_cfg ) {
         DPRINTF ( "No robot name in config ... %s\n", e.what() );
     }
     try {
-        yifu_pdomap.PPv_target = root_cfg["Lxm32i_A"]["PPv_target"].as<uint32_t>();
-        yifu_pdomap.RAMP_v_acc = root_cfg["Lxm32i_A"]["RAMP_v_acc"].as<uint32_t>();
-        yifu_pdomap.RAMP_v_dec = root_cfg["Lxm32i_A"]["RAMP_v_dec"].as<uint32_t>();
-        set_points = root_cfg["Lxm32i_A"]["set_points"].as<std::vector<int32_t>>();
+        std::string motor_node_name ( "Lxm32i_"+std::to_string ( position ) );
+        const auto motor_node = root_cfg[motor_node_name];
+        yifu_pdomap.PPv_target = motor_node["PPv_target"].as<uint32_t>();
+        yifu_pdomap.RAMP_v_acc = motor_node["RAMP_v_acc"].as<uint32_t>();
+        yifu_pdomap.RAMP_v_dec = motor_node["RAMP_v_dec"].as<uint32_t>();
+        set_points = motor_node["set_points"].as<std::vector<int32_t>>();
+        op_mode = motor_node["OpMode"].as<std::string>();
+        sign_dir = motor_node["sign_dir"].as<int32_t>();
+        mmXturn = motor_node["mmXturn"].as<int32_t>();
+        //yifu_pdomap.ScalePOSnum = mmXturn;
+        
     } catch ( YAML::Exception &e ) {
         DPRINTF ( "Catch Exception in %s ... %s\n", __PRETTY_FUNCTION__, e.what() );
+        return EC_BOARD_INIT_SDO_FAIL;
     }
 
-    uint8_t zero = 0;
+    sp_it = set_points.begin();
+                
     try {
         init_SDOs();
         init_sdo_lookup(false);
@@ -537,6 +561,8 @@ inline int LXM32iESC::init ( const YAML::Node & root_cfg ) {
         writeSDO_byname( ScalePOSdenom, yifu_pdomap.ScalePOSdenom );
         writeSDO_byname( ScalePOSnum, yifu_pdomap.ScalePOSnum );
         
+        writeSDO_byname( HMmethod, yifu_pdomap.HMmethod );
+        writeSDO_byname( HMp_setP, yifu_pdomap.HMp_setP );
         
     } catch ( EscWrpError &e ) {
 
@@ -545,23 +571,17 @@ inline int LXM32iESC::init ( const YAML::Node & root_cfg ) {
     }
 
     // set filename with robot_id
-    log_filename = std::string ( "/tmp/LXM32iESC_"+std::to_string ( 1 ) +"_log.txt" );
+    log_filename = std::string ( "/tmp/LXM32iESC_pos_"+std::to_string ( position ) +"_log.txt" );
 
     // we log when receive PDOs
     Log::start_log ( true );
 
-    XDDP_pipe::init (robot_name+"@LXM32i_id_"+std::to_string ( get_robot_id() ) );
+    XDDP_pipe::init (robot_name+"@LXM32i_pos_"+std::to_string ( position ) );
         
     return EC_BOARD_OK;
 
 }
 
-
-inline void LXM32iESC::test_motor ( void ) {
-
-    std::cout << "Test Motor" << "\n";
-    
-}
 
 inline void LXM32iESC::handle_fault ( void ) {
 
@@ -572,6 +592,155 @@ inline void LXM32iESC::handle_fault ( void ) {
         tx_pdo.DCOMcontrol.dcom_control.b7_FaultReset = 0;                            
     }
 
+}
+
+inline int32_t LXM32iESC::set_pos_target( int32_t pos ) {
+    
+    int32_t pos_mm_pulses = pos * 32768 / mmXturn;
+    tx_pdo.PPp_target = rx_pdo._p_act + (sign_dir * pos_mm_pulses);
+    DPRINTF("<%d>[%s]: %d = %d %d %d %d\n", position, __FUNCTION__, tx_pdo.PPp_target, rx_pdo._p_act, sign_dir, pos_mm_pulses, pos);
+            
+}
+
+
+template<class C>
+inline int LXM32iESC::user_loop( C &cmd ) {
+
+    auto rx_pdo_update = 0;
+    
+    if ( rx_pdo._DCOMstatus.all != prev_rx_pdo._DCOMstatus.all ) {
+    
+        prev_rx_pdo = rx_pdo;
+        //rx_pdo.dump(std::cout, "\n");
+        rx_pdo_update = 1;
+    }
+    
+    if ( rx_pdo._DCOMopmd_act == HOMING ) {
+
+        if ( rx_pdo._DCOMstatus.dcom_status.b10_target_reached &&
+             rx_pdo._DCOMstatus.dcom_status.b12_operating_mode_specific &&
+             rx_pdo._DCOMstatus.dcom_status.b14_x_end &&
+             rx_pdo._DCOMstatus.dcom_status.b15_ref_ok ) {
+            
+            std::cout << "... homing reached " << rx_pdo._p_act << "\n";
+        }
+    }
+
+    if ( rx_pdo._DCOMopmd_act == PPOS ) {
+
+        if ( rx_pdo._DCOMstatus.dcom_status.b12_operating_mode_specific ) {
+            
+            tx_pdo.DCOMcontrol.dcom_control.b4_ = 0x0;
+        }
+
+        if ( rx_pdo_update &&
+             rx_pdo._DCOMstatus.dcom_status.b10_target_reached &&
+             ! rx_pdo._DCOMstatus.dcom_status.b12_operating_mode_specific &&
+             rx_pdo._DCOMstatus.dcom_status.b14_x_end ) {
+            
+            std::cout << "... target reached " << rx_pdo._p_act << "\n";
+            tx_pdo.DCOMcontrol.dcom_control.b4_ = 0x1;
+            if ( sp_it == set_points.end() ) {
+                sp_it = set_points.begin();
+            }   
+            set_pos_target( *sp_it );
+            sp_it ++;
+        }
+    }
+    
+    if ( cmd ) {
+        
+        std::cout << cmd << "\n";
+        //rx_pdo.dump(std::cout, "\n"); std::cout << "\n\n";
+
+        if ( rx_pdo._DCOMstatus.dcom_status.b3_Fault ) {
+            tx_pdo.DCOMcontrol.dcom_control.b7_FaultReset = 1;
+            DPRINTF("[%s]: reset fault 0x%X\n", __FUNCTION__, rx_pdo._LastError);
+        } else {
+            tx_pdo.DCOMcontrol.dcom_control.b7_FaultReset = 0;                            
+        }
+
+        // 
+        switch (cmd) {
+            case 'a' :
+                tx_pdo.DCOMcontrol.all = 0x0;
+                break;
+            case 'b' :
+                //tx_pdo.DCOMcontrol.all = 0x6;
+                tx_pdo.DCOMcontrol.dcom_control.b0_SwitchOn = 0x0;
+                tx_pdo.DCOMcontrol.dcom_control.b1_EnableVoltage = 0x1;
+                tx_pdo.DCOMcontrol.dcom_control.b2_QuickStop = 0x1;
+                tx_pdo.DCOMcontrol.dcom_control.b3_EnableOperation = 0x0;
+                break;
+            case 'c' :
+                //tx_pdo.DCOMcontrol.all = 0xF;
+                tx_pdo.DCOMcontrol.dcom_control.b0_SwitchOn = 0x1;
+                tx_pdo.DCOMcontrol.dcom_control.b1_EnableVoltage = 0x1;
+                tx_pdo.DCOMcontrol.dcom_control.b2_QuickStop = 0x1;
+                tx_pdo.DCOMcontrol.dcom_control.b3_EnableOperation = 0x1;
+                break;
+
+            case 'j' :
+                tx_pdo.DCOMopmode = JOG;
+                tx_pdo.JOGactivate = POS_SLOW;
+                break;
+            case 'h' :
+                // set op mode 
+                tx_pdo.DCOMopmode = HOMING;
+                // start homing
+                tx_pdo.DCOMcontrol.dcom_control.b4_ = 0x1;
+                break;
+            case 'p' :
+                // position
+                tx_pdo.DCOMopmode = PPOS;
+                tx_pdo.DCOMcontrol.dcom_control.b4_ = 0x1;
+                //tx_pdo.DCOMcontrol.dcom_control.b9_ChangeOnSetpoint = 0x1;
+                // starts a movement to a target position
+                // Target values transmitted during a movement become immediately effective and are executed at the target.
+                // The movement is not stopped at the current target position
+                //tx_pdo.DCOMcontrol.dcom_control.b5_ = 0x0;
+                // Target values transmitted during a movement become immediately effective and are immediately executed.
+                tx_pdo.DCOMcontrol.dcom_control.b5_ = 0x1;                
+                // relative movement
+                //tx_pdo.DCOMcontrol.dcom_control.b6_ = 0x1;
+                // absolute movement
+                tx_pdo.DCOMcontrol.dcom_control.b6_ = 0x0;
+                // set pos
+                set_pos_target( *sp_it );
+                sp_it ++;
+                break;
+            case 'n' :
+                tx_pdo.DCOMcontrol.dcom_control.b4_ = 0x1;
+                break;                
+            case 'v' :
+                // velocity
+                tx_pdo.DCOMopmode = PVEL;
+                tx_pdo.PVv_target = 50;
+                break;
+            case 't' :
+                // torque
+                tx_pdo.DCOMopmode = PTOR;
+                tx_pdo.PTtq_target = 30;
+                break;
+            case 'x' :
+                if ( tx_pdo.JOGactivate == POS_SLOW ) {
+                    tx_pdo.JOGactivate = NEG_SLOW;                    
+                } else {
+                    tx_pdo.JOGactivate = POS_SLOW;
+                }
+                tx_pdo.PVv_target *= -1;
+                tx_pdo.PTtq_target *= -1;
+                break;
+            case 'X' :
+                tx_pdo.PVv_target += 10;
+                tx_pdo.PTtq_target += 10;
+                break;
+                
+            default :
+                break;
+        }
+    }
+        
 }
 
 

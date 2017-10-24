@@ -38,7 +38,7 @@ static const iit::ecat::objd_t source_SDOs[] = {
     {0x6061, 0x0,  DTYPE_INTEGER8,    8, ATYPE_RO, _DCOMopmd_act.c_str(), 0 },
     {0x6064, 0x0,  DTYPE_INTEGER32,  32, ATYPE_RO, _p_act.c_str(),        0 },
     {0x60F4, 0x0,  DTYPE_INTEGER32,  32, ATYPE_RO, _p_dif.c_str(),        0 },
-    {0x6077, 0x0,  DTYPE_INTEGER32,  16, ATYPE_RO, _tq_act.c_str(),        0 },
+    {0x6077, 0x0,  DTYPE_INTEGER32,  16, ATYPE_RO, _tq_act.c_str(),       0 },
     {0x603F, 0x0,  DTYPE_UNSIGNED16, 16, ATYPE_RO, _LastError.c_str(),    0 },
     {0x3008, 0x1,  DTYPE_UNSIGNED16, 16, ATYPE_RO, _IO_act.c_str(),       0 },    
     // 0x1600 slave RxPDO 
@@ -56,6 +56,9 @@ static const iit::ecat::objd_t source_SDOs[] = {
     // position scaling 
     {0x3006, 0x7,  DTYPE_INTEGER32,  32, ATYPE_RW, ScalePOSdenom.c_str(),0 },
     {0x3006, 0x8,  DTYPE_INTEGER32,  32, ATYPE_RW, ScalePOSnum.c_str(),  0 },
+    // homing
+    {0x6098, 0x0,  DTYPE_INTEGER8,    8, ATYPE_RW, HMmethod.c_str(),     0 },
+    {0x301B, 0x16, DTYPE_INTEGER32,  32, ATYPE_RW, HMp_setP.c_str(),     0 },
     
     {0, 0, 0, 0, 0, 0, 0 }
 };
@@ -105,9 +108,12 @@ void LXM32iESC::init_SDOs ( void ) {
     SDOs[i++].data = ( void* ) &LXM32iESC::sdo.PPv_target;
     SDOs[i++].data = ( void* ) &LXM32iESC::sdo.RAMP_v_acc;
     SDOs[i++].data = ( void* ) &LXM32iESC::sdo.RAMP_v_dec;
-    
+    // position scaling 
     SDOs[i++].data = ( void* ) &LXM32iESC::sdo.ScalePOSdenom;
     SDOs[i++].data = ( void* ) &LXM32iESC::sdo.ScalePOSnum;
+    // homing
+    SDOs[i++].data = ( void* ) &LXM32iESC::sdo.HMmethod;
+    SDOs[i++].data = ( void* ) &LXM32iESC::sdo.HMp_setP;
     
     SDOs[i++].data = 0;
 
