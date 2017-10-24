@@ -35,15 +35,15 @@ public:
     
     void init ( const std::string pipe_name ) {
 
-        std::string pipe = pipe_prefix + pipe_name;
+        pipe_path = pipe_prefix + pipe_name;
 
 #ifdef __COBALT__
         fd = xddp_bind ( pipe_name.c_str(), pool_size );
 #else
-        mkfifo ( pipe.c_str(), S_IRWXU|S_IRWXG );
-        fd = open ( pipe.c_str(), O_RDWR | O_NONBLOCK );
+        mkfifo ( pipe_path.c_str(), S_IRWXU|S_IRWXG );
+        fd = open ( pipe_path.c_str(), O_RDWR | O_NONBLOCK );
 #endif
-        DPRINTF ( " .... open %s\n", pipe.c_str() );
+        DPRINTF ( " .... open %s\n", pipe_path.c_str() );
         assert ( fd > 0 );
     }
 
@@ -51,12 +51,11 @@ public:
         if ( ! fd ) {
             return;
         }
-
         close ( fd );
 #ifndef __COBALT__
-        std::string pipe = pipe_prefix + pipe_name;
-        unlink ( pipe.c_str() );
+        unlink ( pipe_path.c_str() );
 #endif
+        DPRINTF ( " .... close %s\n", pipe_path.c_str() );        
     }
 
     template<typename XddpTxTypes>
@@ -98,7 +97,8 @@ public:
     }
 
 protected:
-    std::string pipe_name;
+    // prefix + name
+    std::string pipe_path;
 
 private:
     int fd;

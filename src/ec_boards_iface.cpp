@@ -55,7 +55,10 @@ int Ec_Boards_ctrl::init ( void ) {
 
 int Ec_Boards_ctrl::shutdown ( bool do_power_off ) {
 
-    // slave Dtor
+    // slave shared_ptr Dtor
+    // destructs the owned object if no more shared_ptrs link to it 
+    
+    for ( auto const& item : slaves ) { DPRINTF(" shared_ptr use_count %ld\n", item.second.use_count()); }
     slaves.clear();
     iit::ecat::finalize ( do_power_off );
 
