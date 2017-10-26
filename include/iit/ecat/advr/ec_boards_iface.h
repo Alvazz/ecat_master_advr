@@ -169,8 +169,6 @@ public:
         return slaves.size();
     };
  
-    void start_motors ( int );
-    void stop_motors ( void );
     /**
      * @brief update slave firmware using FOE
      *
@@ -192,21 +190,10 @@ public:
         return ( slaves.find ( sPos ) != slaves.end() ) ? dynamic_cast<T*> ( slaves[sPos].get() ) : NULL;
     }
 
-    Motor * 	slave_as_Motor ( uint16_t sPos )	{
+    Motor * slave_as_Motor ( uint16_t sPos )	{
         return ( slaves.find ( sPos ) != slaves.end() ) ? dynamic_cast<Motor*> ( slaves[sPos].get() ) : NULL;
     }
     
-    // check ... could be removed ?!?!
-    HpESC *  	slave_as_HP ( uint16_t sPos )	{
-        return ( slaves.find ( sPos ) != slaves.end() ) ? dynamic_cast<HpESC*> ( slaves[sPos].get() ) : NULL;
-    }
-    LpESC *  	slave_as_LP ( uint16_t sPos )	{
-        return ( slaves.find ( sPos ) != slaves.end() ) ? dynamic_cast<LpESC*> ( slaves[sPos].get() ) : NULL;
-    }
-    Ft6ESC * 	slave_as_FT ( uint16_t sPos )	{
-        return ( slaves.find ( sPos ) != slaves.end() ) ? dynamic_cast<Ft6ESC*> ( slaves[sPos].get() ) : NULL;
-    }
-
     const YAML::Node & get_config_YAML_Node ( void ) {
         return root_cfg;
     }
