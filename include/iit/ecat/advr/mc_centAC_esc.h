@@ -450,11 +450,11 @@ public :
         } catch ( YAML::KeyNotFound &e ) {  }
 
         try {
-            float PDOloopTimeSec = root_cfg["ec_boards_base"]["sync_cycle_time_ns"].as<float>() / 1e9 ;
+            float PDOloopTimeSec = root_cfg["ec_board_ctrl"]["sync_cycle_time_ns"].as<float>() / 1e9 ;
             writeSDO_byname ( "PDOloopTimeSec", PDOloopTimeSec );
-        } catch ( std::exception &e ) {
+        } catch ( YAML::KeyNotFound &e ) {
             DPRINTF ( "Catch Exception in %s ... %s\n", __PRETTY_FUNCTION__, e.what() );
-            return EC_BOARD_KEY_NOT_FOUND; 
+            return EC_BOARD_KEY_NOT_FOUND;
         }
         
         // set filename with robot_id
