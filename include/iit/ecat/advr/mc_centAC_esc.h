@@ -73,6 +73,8 @@ struct CentAcEscSdoTypes {
     float       directTorqueFeedbackGain;
     float       sandBoxAngle;
     float       sandBoxFriction;
+    float       posRefFilterFreq;
+    float       PDOloopTimeSec;
     
     // ram
     char        m3_fw_ver[8];
@@ -90,8 +92,13 @@ struct CentAcEscSdoTypes {
     float       motor_temp;
     float       maxLimitedCurr;
     float       torqueSensTemp;
-    float       DacChA;
-    float       DacChB;
+    float       sandBoxHysteresis;
+    uint16_t    DacChA;
+    uint16_t    DacChB;
+    uint16_t    motorVelArrayDim;
+    uint16_t    torqueCalibArrayDim;
+    float       posRefFiltAcoeff;
+    float       posRefFiltBcoeff;
     
     // aux pdo
     float       pos_ref_fb;
@@ -99,11 +106,16 @@ struct CentAcEscSdoTypes {
     float       iq_out_fb;
     float       id_ref_fb;
     float       id_out_fb;
-    float       torque_no_average;
-    float       torque_no_calibrated;
+    float       torque_no_average;          // torque read (not averaged)
+    float       torque_no_calibrated;       // torque read without calibration
     float       board_temp_fb;
     float       motor_temp_fb;
     float       i_batt_fb;
+    float       motor_vel_filt;
+    float       Motor_Encoder;
+    float       Link_Encoder;
+    float       Deflection_Encoder;
+    float       position_ref_filtered;
     float       iq_offset;
 
 };
@@ -437,6 +449,14 @@ public :
             writeSDO_byname ( "Max_cur", max_cur );
         } catch ( YAML::KeyNotFound &e ) {  }
 
+        try {
+            float PDOloopTimeSec = root_cfg["ec_boards_base"]["sync_cycle_time_ns"].as<float>() / 1e9 ;
+            writeSDO_byname ( "PDOloopTimeSec", PDOloopTimeSec );
+        } catch ( std::exception &e ) {
+            DPRINTF ( "Catch Exception in %s ... %s\n", __PRETTY_FUNCTION__, e.what() );
+            return EC_BOARD_KEY_NOT_FOUND; 
+        }
+        
         // set filename with robot_id
         log_filename = std::string ( "/tmp/CentAcESC_"+std::to_string ( sdo.Joint_robot_id ) +"_log.txt" );
 
