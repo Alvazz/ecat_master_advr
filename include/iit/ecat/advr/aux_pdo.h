@@ -17,11 +17,11 @@ namespace advr {
 #define MK_PDO_AUX(kls,arg)             std::make_shared<kls>(kls(getSDObjd(arg)))
 #define MK_PDO_AUX_WRD(kls,arg1,arg2)   std::make_shared<kls>(kls(getSDObjd(arg1),getSDObjd(arg2)))
 
-#define AUX_PDO_OP_SET  0xFB
-#define AUX_PDO_OP_GET  0xBF
-#define AUX_PDO_OP_WRD  0xBB
-#define AUX_PDO_OP_ACK  0x00
-#define AUX_PDO_OP_NACK 0xEE
+#define AUX_PDO_OP_SET  0xA
+#define AUX_PDO_OP_GET  0xB
+#define AUX_PDO_OP_WRD  0xC
+#define AUX_PDO_OP_ACK  0x0
+#define AUX_PDO_OP_NACK 0xE
 
 #define AUX_PDO_EE_INVALID_OP   0xE1
 #define AUX_PDO_EE_INVALID_IDX  0xE2
@@ -34,14 +34,14 @@ class PDO_aux {
 public:
     
     int check_ackNack( uint16_t op_idx_ack, uint32_t code) {
-        if ( (op_idx_ack >> 8) == 0xEE ) {
+        if ( (op_idx_ack >> 12) == 0xE ) {
             DPRINTF("[PDO_aux %s] Fail %s errno 0x%02X\n", get_objd()->name, __FUNCTION__, code);
             return 1;
         }
         return 0;
     }
     int check_idx( uint16_t op_idx_ack, uint16_t idx, uint32_t code) {
-        if ( (op_idx_ack & 0xFF) != idx ) {
+        if ( (op_idx_ack & 0xFFF) != idx ) {
             DPRINTF("[PDO_aux %s] Fail %s errno 0x%02X\n", get_objd()->name, __FUNCTION__, code);
             return 1;
         }
@@ -72,7 +72,7 @@ public:
     template<class T>
     void on_tx_impl( T& tx_pdo ) {
         // get op
-        tx_pdo.op_idx_aux = AUX_PDO_OP_GET << 8 | sdo_objd->subindex & 0xFF;
+        tx_pdo.op_idx_aux = AUX_PDO_OP_GET << 12 | sdo_objd->subindex & 0xFFF;
         //DPRINTF("PDO_aux 0x%04X\n", tx_pdo.op_idx_aux);
     };
     
@@ -108,7 +108,7 @@ public:
     template<class T>
     void on_tx_impl( T& tx_pdo ) {
         // set op
-        tx_pdo.op_idx_aux = AUX_PDO_OP_SET << 8 | sdo_objd->subindex & 0xFF;
+        tx_pdo.op_idx_aux = AUX_PDO_OP_SET << 12 | sdo_objd->subindex & 0xFFF;
         tx_pdo.aux = *(float*)sdo_objd->data;
         //DPRINTF("PDO_aux 0x%04X\n", tx_pdo.op_idx_aux);
     };
@@ -145,8 +145,8 @@ public:
     // 
     template<class T>
     void on_tx_impl( T& tx_pdo ) {
-        idxs = ( (sdo_objd_wr->subindex & 0xF) << 4) | (sdo_objd_rd->subindex & 0xF);
-        tx_pdo.op_idx_aux = AUX_PDO_OP_WRD << 8 | idxs ;
+        idxs = ( (sdo_objd_wr->subindex & 0x3F) << 6) | (sdo_objd_rd->subindex & 0x3F);
+        tx_pdo.op_idx_aux = AUX_PDO_OP_WRD << 12 | idxs ;
         tx_pdo.aux = *(float*)sdo_objd_wr->data;
         //DPRINTF("PDO_wrd_aux 0x%04X\n", tx_pdo.op_idx_aux);
     };
@@ -168,7 +168,7 @@ public:
     virtual const objd_t * get_objd(void)   { return get_objd_rd(); }
 
 private:
-    uint8           idxs;
+    uint16          idxs;
     const objd_t    *sdo_objd_wr, *sdo_objd_rd; 
 };
 
