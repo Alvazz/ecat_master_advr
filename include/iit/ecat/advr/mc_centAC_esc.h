@@ -448,14 +448,6 @@ public :
             float max_cur = node_cfg["max_current_A"].as<float>();
             writeSDO_byname ( "Max_cur", max_cur );
         } catch ( YAML::KeyNotFound &e ) {  }
-
-        try {
-            float PDOloopTimeSec = root_cfg["ec_board_ctrl"]["sync_cycle_time_ns"].as<float>() / 1e9 ;
-            writeSDO_byname ( "PDOloopTimeSec", PDOloopTimeSec );
-        } catch ( YAML::KeyNotFound &e ) {
-            DPRINTF ( "Catch Exception in %s ... %s\n", __PRETTY_FUNCTION__, e.what() );
-            return EC_BOARD_KEY_NOT_FOUND;
-        }
         
         // set filename with robot_id
         log_filename = std::string ( "/tmp/CentAcESC_"+std::to_string ( sdo.Joint_robot_id ) +"_log.txt" );
@@ -493,7 +485,10 @@ public :
 
         try {
             set_ctrl_status_X ( this, CTRL_POWER_MOD_OFF );
-            
+
+            // set posRefFilter OFF when  CTRL_POWER_MOD_OFF
+            //set_ctrl_status_X ( this, CTRL_POS_REF_FILTER_OFF );
+             
             // set tx_pdo.gainP
             // pdo gains will be used in OP
             

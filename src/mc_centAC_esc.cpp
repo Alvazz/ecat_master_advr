@@ -75,7 +75,6 @@ static const iit::ecat::objd_t source_SDOs[] = {
     { 0x8000, 0x18, DTYPE_REAL32,      32, ATYPE_RW,    "sandBoxAngle",         0},
     { 0x8000, 0x19, DTYPE_REAL32,      32, ATYPE_RW,    "sandBoxFriction",      0},
     { 0x8000, 0x1a, DTYPE_REAL32,      32, ATYPE_RW,    "posRefFilterFreq",     0},
-    { 0x8000, 0x1b, DTYPE_REAL32,      32, ATYPE_RW,    "PDOloopTimeSec",       0},
 
     // SD0 0x8001
     { 0x8001, 0x1,  DTYPE_VISIBLE_STRING,   64, ATYPE_RO, "m3_fw_ver" ,         0},
@@ -187,7 +186,6 @@ void CentAcESC::init_SDOs ( void ) {
     SDOs[i++].data = ( void* ) &CentAcESC::sdo.sandBoxAngle;
     SDOs[i++].data = ( void* ) &CentAcESC::sdo.sandBoxFriction;
     SDOs[i++].data = ( void* ) &CentAcESC::sdo.posRefFilterFreq;
-    SDOs[i++].data = ( void* ) &CentAcESC::sdo.PDOloopTimeSec;
     
     // 0x8001
     SDOs[i++].data = ( void* ) &CentAcESC::sdo.m3_fw_ver;
