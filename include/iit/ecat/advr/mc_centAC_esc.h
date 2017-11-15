@@ -491,8 +491,12 @@ public :
             set_ctrl_status_X ( this, CTRL_POWER_MOD_OFF );
 
             // set posRefFilter OFF when  CTRL_POWER_MOD_OFF
-            //set_ctrl_status_X ( this, CTRL_POS_REF_FILTER_OFF );
-             
+            try {
+                bool enable_pos_filter = node_cfg["enable_pos_filter"].as<bool>();
+                if ( enable_pos_filter ) { set_ctrl_status_X ( this, CTRL_POS_REF_FILTER_ON ); }
+                else { set_ctrl_status_X ( this, CTRL_POS_REF_FILTER_OFF ); }
+            } catch ( YAML::Exception &e ) { DPRINTF("%s\n", e.what()); }
+
             // set tx_pdo.gainP
             // pdo gains will be used in OP
             
@@ -546,7 +550,11 @@ public :
             handle_fault();
 
             // set sandbox activation 
-            set_ctrl_status_X ( this, CTRL_SAND_BOX_ON );
+            try {
+                bool enable_sandbox = node_cfg["enable_sandbox"].as<bool>();
+                if ( enable_sandbox ) { set_ctrl_status_X ( this, CTRL_SAND_BOX_ON ); }
+                else { set_ctrl_status_X ( this, CTRL_SAND_BOX_OFF ); }
+            } catch ( YAML::Exception &e ) {  DPRINTF("%s\n", e.what()); }
             
             // set controller mode
             set_ctrl_status_X ( this, controller_type );
