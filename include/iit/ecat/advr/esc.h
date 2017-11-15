@@ -442,7 +442,7 @@ inline std::ostream& operator<< (std::ostream& os, const McEscPdoTypes::pdo_rx& 
 
 inline int check_cmd_ack ( uint16_t cmd, uint16_t ack ) {
     if ( ack == ( ( cmd & 0x00FF ) | CTRL_CMD_DONE ) ) {
-        //DPRINTF ( "DONE 0x%04X\n", cmd );
+        DPRINTF ( "DONE 0x%04X\n", cmd );
         return EC_BOARD_OK;
     } else if ( ack == ( ( cmd & 0x00FF ) | CTRL_CMD_ERROR ) ) {
         DPRINTF ( "FAIL 0x%04X\n", cmd );
