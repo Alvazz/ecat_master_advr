@@ -39,8 +39,12 @@ add_definitions(-fPIC)
 protobuf_generate_cpp(PROTO_SRC PROTO_HEADER ${msgs})
 protobuf_generate_python(PROTO_PY ${msgs})
 add_library (pdo_pb ${PROTO_HEADER} ${PROTO_SRC} ${PROTO_PY})
+target_link_libraries(pdo_pb ${PROTOBUF_LIBRARIES})
 
-install(TARGETS pdo_pb DESTINATION lib)
+# install(TARGETS pdo_pb DESTINATION lib)
 install(FILES ${PROTO_HEADER}  DESTINATION include/protobuf)
+
+library_install(pdo_pb 1 0 0)
+
 
 
