@@ -4,10 +4,10 @@ project(ecat_master)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 include(MacroOptionalBuild)
 include(MacroSetcap)
+include(MacroInstallLibrary)
 
 set(CMAKE_CXX_FLAGS     "${CMAKE_CXX_FLAGS} -std=c++11 -O3")
 set(ENABLE_XENO         CACHE BOOL "OFF")
-set(SOEM_ROOT           $ENV{SOEM_ROOT} CACHE PATH "Base path of the SOEM headers")
 
 if ( ${ENABLE_XENO} )
     find_package(Xenomai)
@@ -21,6 +21,10 @@ endif()
 
 add_subdirectory(protobuf)
 
+# find soem
+find_package(soem${LIB_TYPE} REQUIRED)
+find_package(iitecat_iface${LIB_TYPE} REQUIRED)
+
 #######################
 ## libwalkman_master
 #######################
@@ -30,8 +34,8 @@ add_definitions(-DKEEP_POWER_ON)
 
 include_directories(include)
 include_directories(${CMAKE_BINARY_DIR})
-include_directories(${SOEM_ROOT}/include)
-link_directories(${SOEM_ROOT}/lib)
+include_directories(${soem${LIB_TYPE}_INCLUDE_DIRS}
+                    ${iitecat_iface${LIB_TYPE}_INCLUDE_DIRS})
 
 set(LIB_SOURCES
     src/ec_boards_iface.cpp
@@ -66,9 +70,12 @@ if ( Xenomai_FOUND )
     set_xeno_flags(${LIB_NAME})
 endif()
 
-target_link_libraries(${LIB_NAME} iitecat_iface${LIB_TYPE} soem${LIB_TYPE} pthread yaml-cpp)
+target_link_libraries(${LIB_NAME} PUBLIC ${soem${LIB_TYPE}_LIBRARIES} 
+                                  ${iitecat_iface${LIB_TYPE}_LIBRARIES} 
+                                  pthread 
+                                  yaml-cpp
+                                  PRIVATE  pdo_pb)
 
-# Install
-install(DIRECTORY include/  DESTINATION include)
-install(TARGETS ${LIB_NAME}  DESTINATION lib)
+# NOTE specify CMAKE_INSTALL_PREFIX cmake variable
+library_install(${LIB_NAME} 1 0 0)
 
