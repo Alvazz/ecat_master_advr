@@ -36,7 +36,7 @@
 #define CTRL_SET_IMPED_MODE     0x00D4
 #define CTRL_SET_POS_MODE       0x003B
 #define CTRL_SET_POS_LINK_MODE  0x003C
-#define CTRL_SET_VEL_MODE       0x0037
+#define CTRL_SET_VEL_MODE       0x0071 // NOTE used to be 0x0037
 #define CTRL_SET_VOLT_MODE      0x0039
 #define CTRL_SET_CURR_MODE      0x00CC
 
