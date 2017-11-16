@@ -228,9 +228,9 @@ int Ec_Boards_ctrl::recv_from_slaves ( ec_timing_t &timing ) {
     return EC_BOARD_OK;
 }
 
-int Ec_Boards_ctrl::send_to_slaves() {
+int Ec_Boards_ctrl::send_to_slaves(bool write_slaves_pdo) {
 
-    return iit::ecat::send_to_slaves();
+    return iit::ecat::send_to_slaves(write_slaves_pdo);
 }
 
 

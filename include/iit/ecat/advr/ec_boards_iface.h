@@ -158,7 +158,7 @@ public:
      *
      * @return int the number of boards that received the PDO
      */
-    int send_to_slaves ( void );
+    int send_to_slaves ( bool write_slaves_pdo=true );
 
     /**
      * @brief
