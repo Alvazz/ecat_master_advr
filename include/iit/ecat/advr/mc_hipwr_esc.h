@@ -206,7 +206,9 @@ protected :
             push_back ( log );
         }
         
-        xddp_write( rx_pdo );
+        if(use_pipe) {
+            xddp_write( rx_pdo );
+        }
 
     }
 
@@ -327,7 +329,9 @@ public :
         // we log when receive PDOs
         start_log ( true );
 
-        XDDP_pipe::init ( "Motor_id_"+std::to_string ( get_robot_id() ) );
+        if(use_pipe) {
+            XDDP_pipe::init ( "Motor_id_"+std::to_string ( get_robot_id() ) );
+        }
         
         return EC_BOARD_OK;
 
@@ -622,6 +626,12 @@ inline int HpESC::read_conf ( std::string conf_key, const YAML::Node & root_cfg 
         _sgn = node_cfg["sign"].as<int>();
         _offset = node_cfg["pos_offset"].as<float>();
         _offset = DEG2RAD ( _offset );
+        // set control mode variable
+        set_control_mode(root_cfg[conf_key]["control_mode"].as<std::string>());
+        // set use pipe variable NOTE true by default
+        if(root_cfg[conf_key]["use_pipe"]) {
+            use_pipe = root_cfg[conf_key]["use_pipe"].as<bool>();
+        }
 
 #if 0        
         if ( node_cfg["gear_ratio"] ) {

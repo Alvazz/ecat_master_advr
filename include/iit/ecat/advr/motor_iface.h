@@ -50,8 +50,13 @@ private:
 //         return c->getSDO_byname( name.c_str(), value );
 //     }
 
-public:
+    std::string _control_mode;
 
+public:
+    
+    const std::string& get_control_mode() const { return _control_mode; }
+    void set_control_mode(const std::string& ctrl_mode) { _control_mode = ctrl_mode; }
+    
     template<typename T>
     int writeSDO ( std::string const & name, T value ) {
         
@@ -134,6 +139,9 @@ public:
     virtual uint32_t get_ESC_type(void) = 0;
     
 protected:
+    
+        
+    bool use_pipe = true;
 
     //ec_state     _actual_state;
 };
