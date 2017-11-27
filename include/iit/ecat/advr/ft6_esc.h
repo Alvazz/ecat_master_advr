@@ -285,8 +285,8 @@ public:
         start_log ( true );
 
         // set use pipe variable NOTE true by default
-        if(root_cfg["ec_boards_base"]["use_pipes"]) {
-            use_pipes = root_cfg["ec_boards_base"]["use_pipes"].as<bool>();
+        if(root_cfg["ec_board_ctrl"]["use_pipes"]) {
+            use_pipes = root_cfg["ec_board_ctrl"]["use_pipes"].as<bool>();
         }
         
         if( use_pipes ) {
