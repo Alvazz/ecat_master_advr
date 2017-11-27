@@ -206,7 +206,7 @@ protected :
             push_back ( log );
         }
         
-        if(use_pipe) {
+        if(use_pipes) {
             xddp_write( rx_pdo );
         }
 
@@ -329,7 +329,7 @@ public :
         // we log when receive PDOs
         start_log ( true );
 
-        if(use_pipe) {
+        if(use_pipes) {
             XDDP_pipe::init ( "Motor_id_"+std::to_string ( get_robot_id() ) );
         }
         
@@ -629,8 +629,8 @@ inline int HpESC::read_conf ( std::string conf_key, const YAML::Node & root_cfg 
         // set control mode variable
         set_control_mode(root_cfg[conf_key]["control_mode"].as<std::string>());
         // set use pipe variable NOTE true by default
-        if(root_cfg[conf_key]["use_pipe"]) {
-            use_pipe = root_cfg[conf_key]["use_pipe"].as<bool>();
+        if(root_cfg["ec_boards_base"]["use_pipes"]) {
+            use_pipes = root_cfg["ec_boards_base"]["use_pipes"].as<bool>();
         }
 
 #if 0        

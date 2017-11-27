@@ -329,7 +329,7 @@ protected :
 
         ///////////////////////////////////////////////////
         // - ipc 
-        if(use_pipe) {
+        if(use_pipes) {
             xddp_write( rx_pdo );
         }
         //std::string sz_string;
@@ -463,7 +463,7 @@ public :
         // we log when receive PDOs
         start_log ( true );
 
-        if(use_pipe) {
+        if(use_pipes) {
             XDDP_pipe::init (robot_name+"@Motor_id_"+std::to_string ( sdo.Joint_robot_id ) );
         }
         
@@ -742,8 +742,8 @@ private:
         // set control mode variable
         set_control_mode(root_cfg[conf_key]["control_mode"].as<std::string>());
         // set use pipe variable NOTE true by default
-        if(root_cfg[conf_key]["use_pipe"]) {
-            use_pipe = root_cfg[conf_key]["use_pipe"].as<bool>();
+        if(root_cfg["ec_boards_base"]["use_pipes"]) {
+            use_pipes = root_cfg["ec_boards_base"]["use_pipes"].as<bool>();
         }
 
         ///////////////////////////////////////////////////////////////////////

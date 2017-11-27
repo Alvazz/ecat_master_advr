@@ -139,9 +139,6 @@ public:
     virtual uint32_t get_ESC_type(void) = 0;
     
 protected:
-    
-        
-    bool use_pipe = true;
 
     //ec_state     _actual_state;
 };

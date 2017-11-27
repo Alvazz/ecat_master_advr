@@ -233,7 +233,9 @@ public:
             push_back ( log );
         }
         
-        xddp_write ( rx_pdo );
+        if( use_pipes ) {
+            xddp_write ( rx_pdo );
+        }
 
     }
 
@@ -282,7 +284,14 @@ public:
         // we log when receive PDOs
         start_log ( true );
 
-        XDDP_pipe::init( "Ft_id_"+std::to_string ( get_robot_id() ) );
+        // set use pipe variable NOTE true by default
+        if(root_cfg["ec_boards_base"]["use_pipes"]) {
+            use_pipes = root_cfg["ec_boards_base"]["use_pipes"].as<bool>();
+        }
+        
+        if( use_pipes ) {
+            XDDP_pipe::init( "Ft_id_"+std::to_string ( get_robot_id() ) );
+        }
         
         return EC_BOARD_OK;
 
