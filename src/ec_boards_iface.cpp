@@ -127,13 +127,19 @@ void Ec_Boards_ctrl::factory_board ( void ) {
         // Foot Sensor
         else if ( ec_slave[i].eep_id == FOOT_SENSOR ) {
 
-            make_board<FootSensorESC>(i);
+            make_board<FootSensor_16x8>(i);
+        }
+        ///////////////////////////////////////////////////
+        // Foot Sensor 10x5
+        else if ( ec_slave[i].eep_id == FOOT_SENS_10x5 ) {
+
+            make_board<FootSensor_10x5>(i);
         }
         ///////////////////////////////////////////////////
         // Skin Sensor
         else if ( ec_slave[i].eep_id == SKIN_SENSOR ) {
 
-            make_board<SkinSensorESC>(i);
+            make_board<SkinSensor_8x3>(i);
         }
         ///////////////////////////////////////////////////
         // IMU VN Sensor

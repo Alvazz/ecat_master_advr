@@ -447,7 +447,7 @@ public :
         try {
             float max_cur = node_cfg["max_current_A"].as<float>();
             writeSDO_byname ( "Max_cur", max_cur );
-        } catch ( YAML::KeyNotFound &e ) {  }
+        } catch ( YAML::Exception &e ) {  }
         
         // set filename with robot_id
         log_filename = std::string ( "/tmp/CentAcESC_"+std::to_string ( sdo.Joint_robot_id ) +"_log.txt" );
