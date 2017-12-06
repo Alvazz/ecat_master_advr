@@ -14,14 +14,12 @@
 #include <iit/ecat/advr/pipes.h>
 #include <iit/ecat/utils.h>
 
-#include <iit/advr/trajectory.h>
+//#include <iit/advr/trajectory.h>
 
 #include <protobuf/ecat_pdo.pb.h>
 
 #include <map>
 #include <iostream>
-
-using namespace advr;
 
 namespace iit {
 namespace ecat {
@@ -45,23 +43,27 @@ std::vector<std::string> const rd_sdos = { };
 _MK_STR(DCOMcontrol);
 _MK_STR(DCOMopmode);
 _MK_STR(PPp_target);
+_MK_STR(PPv_target);
+_MK_STR(RAMP_v_acc);
+_MK_STR(RAMP_v_dec);
 _MK_STR(PVv_target);
 _MK_STR(PTtq_target);
 _MK_STR(IO_DQ_set);
 _MK_STR(JOGactivate);
 
-_MK_STR(PPv_target);
-_MK_STR(RAMP_v_acc);
-_MK_STR(RAMP_v_dec);
 _MK_STR(ScalePOSdenom);
 _MK_STR(ScalePOSnum);
+_MK_STR(MAX_Pv);
 
 _MK_STR(HMmethod);
 _MK_STR(HMp_setP);
 
 
-std::vector<std::string> const wr_pdos = { DCOMcontrol, DCOMopmode, PPp_target, PVv_target, PTtq_target, IO_DQ_set, JOGactivate };
-std::vector<std::string> const wr_sdos = { PPv_target, RAMP_v_acc, RAMP_v_dec, HMmethod, HMp_setP};
+std::vector<std::string> const wr_pdos = {
+    DCOMcontrol, DCOMopmode, PPp_target, PPv_target, RAMP_v_acc, RAMP_v_dec,
+    PVv_target, PTtq_target, IO_DQ_set, JOGactivate
+};
+std::vector<std::string> const wr_sdos = { HMmethod, HMp_setP};
 
 _MK_STR(RxPdoMapCnt);
 _MK_STR(RxPdoMap);
@@ -73,7 +75,9 @@ _MK_STR(RPdo5);
 _MK_STR(RPdo6);
 _MK_STR(RPdo7);
 _MK_STR(RPdo8);
-std::vector<std::string> const rpdos = { RPdo1, RPdo2, RPdo3, RPdo4, RPdo5, RPdo6, RPdo7, RPdo8 };
+_MK_STR(RPdo9);
+_MK_STR(RPdo10);
+std::vector<std::string> const rpdos = { RPdo1, RPdo2, RPdo3, RPdo4, RPdo5, RPdo6, RPdo7, RPdo8, RPdo9, RPdo10 };
 
 
 _MK_STR(TxPdoMapCnt);
@@ -216,10 +220,24 @@ public:
         dcom_control_t  DCOMcontrol;
         uint8_t         DCOMopmode;
         int32_t         PPp_target;
+        uint32_t        PPv_target;
+        uint32_t        RAMP_v_acc;
+        uint32_t        RAMP_v_dec;
         int32_t         PVv_target;
         int16_t         PTtq_target;
         uint16_t        IO_DQ_set;
         uint16_t        JOGactivate;
+
+    std::ostream& dump ( std::ostream& os, const std::string delim ) const {
+        DUMP( os, PPp_target, delim );
+        DUMP( os, PPv_target, delim );
+        DUMP( os, RAMP_v_acc, delim );
+        DUMP( os, RAMP_v_dec, delim );
+        DUMP( os, PVv_target, delim );
+        DUMP( os, PTtq_target, delim );
+        //os << std::endl;
+        return os;
+    }
         
     }  __attribute__ ( ( __packed__ ) );
 
@@ -302,7 +320,7 @@ struct LXM32iEscSdoTypes {
     uint16_t    rxPdoMap;
     
     uint8_t     rxElemCnt;
-    uint32_t    rxMap[8];
+    uint32_t    rxMap[10];
     
     uint8_t     txPdoMapCnt;
     uint16_t    txPdoMap;
@@ -310,26 +328,8 @@ struct LXM32iEscSdoTypes {
     uint8_t     txElemCnt;
     uint32_t    txMap[8];
 
-#if 0
-    /////////////////////////////////////////////
-    // TX  slave_input -- master output
-    dcom_control_t  DCOMcontrol;
-    uint16_t        JOGactivate;
-    uint8_t         DCOMopmode;
-    int32_t         PPp_target;
-    uint16_t        IO_DQ_set;
-    // RX  slave_output -- master input
-    dcom_status_t   _DCOMstatus;
-    uint8_t         _DCOMopmd_act;
-    int32_t         _p_act;
-    uint16_t        _LastError;
-    uint16_t        _IO_act;
-#endif
+    uint32_t    MAX_Pv;
     
-    uint32_t    PPv_target;
-    uint32_t    RAMP_v_acc;
-    uint32_t    RAMP_v_dec;
-        
     int32_t     ScalePOSdenom;
     int32_t     ScalePOSnum;
     
@@ -352,22 +352,23 @@ struct LXM32iEscSdoTypes {
 };
 
 
-// PDO is suitable for the operating mode JOG 
 static struct LXM32iEscSdoTypes yifu_pdomap = {
     // RxPdo
     1,
     0x1600,
     //6,
     //{ 0x60400010, 0x60600008, 0x607A0020, 0x60FF0020, 0x60710010, 0x30081110, 0, 0 },
-    7,
-    { 0x60400010, 0x60600008, 0x607A0020, 0x60FF0020, 0x60710010, 0x30081110, 0x301B0910, 0 }, 
+    //7,
+    //{ 0x60400010, 0x60600008, 0x607A0020, 0x60FF0020, 0x60710010, 0x30081110, 0x301B0910, 0 }, 
+    10,
+    { 0x60400010, 0x60600008, 0x607A0020, 0x60810020, 0x60830020, 0x60840020, 0x60FF0020, 0x60710010, 0x30081110, 0x301B0910 }, 
     // TxPdo
     1,
     0x1A00,
     7,
     { 0x60410010, 0x60610008, 0x60640020, 0x60F40020, 0x60770010, 0x603F0010, 0x30080110, 0 },
     //
-    100, 50000, 50000,
+    500,
     // denom num
     32768, 1,
     // homing
@@ -454,7 +455,7 @@ public:
 
     int32_t set_pos_target( int32_t pos );
     
-    Trj_ptr trj;
+    //advr::Trj_ptr trj;
     
 private:
     stat_t      s_rtt;
