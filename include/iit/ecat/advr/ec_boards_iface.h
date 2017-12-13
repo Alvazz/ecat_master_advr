@@ -22,8 +22,7 @@
 #include <iit/ecat/advr/mc_hand_esc.h>
 #include <iit/ecat/advr/mc_centAC_esc.h>
 #include <iit/ecat/advr/ft6_esc.h>
-#include <iit/ecat/advr/foot_sensor_esc.h>
-#include <iit/ecat/advr/skin_sensor_esc.h>
+#include <iit/ecat/advr/pressure_sensor_esc.h>
 #include <iit/ecat/advr/hub_esc.h>
 #include <iit/ecat/advr/power_board.h>
 #include <iit/ecat/advr/power_f28m36_board.h>
@@ -159,7 +158,7 @@ public:
      *
      * @return int the number of boards that received the PDO
      */
-    int send_to_slaves ( void );
+    int send_to_slaves ( bool write_slaves_pdo=true );
 
     /**
      * @brief

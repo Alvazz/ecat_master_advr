@@ -17,36 +17,23 @@ namespace advr {
 #define MK_PDO_AUX(kls,arg)             std::make_shared<kls>(kls(getSDObjd(arg)))
 #define MK_PDO_AUX_WRD(kls,arg1,arg2)   std::make_shared<kls>(kls(getSDObjd(arg1),getSDObjd(arg2)))
 
-#define AUX_PDO_OP_SET  0xFB
-#define AUX_PDO_OP_GET  0xBF
-#define AUX_PDO_OP_WRD  0xBB
-#define AUX_PDO_OP_ACK  0x00
-#define AUX_PDO_OP_NACK 0xEE
-
-#define AUX_PDO_EE_INVALID_OP   0xE1
-#define AUX_PDO_EE_INVALID_IDX  0xE2
-#define AUX_PDO_EE_READONLY     0xE3
+    
+/*    
+ * 
+    ---------------------      --------------------
+    |0| idx_WR|0| idx_RD|      | WR float value   |
+    ---------------------      --------------------
+    -------------------------  --------------------
+    |0/1| idx_WR|0/1| idx_RD|  | RD float value   |
+    -------------------------  --------------------
+*/
+    
     
 ///////////////////////////////////////////////////////////////////////////////
 //
 
 class PDO_aux {
 public:
-    
-    int check_ackNack( uint16_t op_idx_ack, uint32_t code) {
-        if ( (op_idx_ack >> 8) == 0xEE ) {
-            DPRINTF("[PDO_aux %s] Fail %s errno 0x%02X\n", get_objd()->name, __FUNCTION__, code);
-            return 1;
-        }
-        return 0;
-    }
-    int check_idx( uint16_t op_idx_ack, uint16_t idx, uint32_t code) {
-        if ( (op_idx_ack & 0xFF) != idx ) {
-            DPRINTF("[PDO_aux %s] Fail %s errno 0x%02X\n", get_objd()->name, __FUNCTION__, code);
-            return 1;
-        }
-        return 0;
-    }
     
     template<class T>
     void on_tx( T& tx_pdo );
@@ -71,19 +58,17 @@ public:
     // 
     template<class T>
     void on_tx_impl( T& tx_pdo ) {
-        // get op
-        tx_pdo.op_idx_aux = AUX_PDO_OP_GET << 8 | sdo_objd->subindex & 0xFF;
-        //DPRINTF("PDO_aux 0x%04X\n", tx_pdo.op_idx_aux);
+        tx_pdo.op_idx_aux = sdo_objd->subindex & 0x7F;
+        tx_pdo.aux = 0;
+        DPRINTF("PDO_aux 0x%04X\n", tx_pdo.op_idx_aux);
     };
     
     template<class T>
     void on_rx_impl( T& rx_pdo) {
-        int ret;
-        // check nack
-        ret = check_ackNack(rx_pdo.op_idx_ack, (uint32_t)rx_pdo.aux);
-        // check idx
-        ret |= check_idx(rx_pdo.op_idx_ack, sdo_objd->subindex, (uint32_t)rx_pdo.aux);
-        if ( ! ret ) {
+        // check idx_rd error bit
+        if ( rx_pdo.op_idx_ack & 0x80 ) {
+            DPRINTF("[PDO_aux %s] Fail\n", get_objd()->name);
+        } else {
             *(float*)sdo_objd->data = rx_pdo.aux;
         }
     }
@@ -107,19 +92,17 @@ public:
     // 
     template<class T>
     void on_tx_impl( T& tx_pdo ) {
-        // set op
-        tx_pdo.op_idx_aux = AUX_PDO_OP_SET << 8 | sdo_objd->subindex & 0xFF;
+        tx_pdo.op_idx_aux = (sdo_objd->subindex & 0x7F) << 8 ;
         tx_pdo.aux = *(float*)sdo_objd->data;
-        //DPRINTF("PDO_aux 0x%04X\n", tx_pdo.op_idx_aux);
+        DPRINTF("PDO_aux 0x%04X\n", tx_pdo.op_idx_aux);
     };
     
     template<class T>
     void on_rx_impl( T& rx_pdo) {
-        static uint64_t prev_err_ts;
-        // check nack
-        check_ackNack(rx_pdo.op_idx_ack, (uint32_t)rx_pdo.aux);
-        // check idx
-        check_idx(rx_pdo.op_idx_ack, sdo_objd->subindex, (uint32_t)rx_pdo.aux);
+        // check idx_wr error bit
+        if ( (rx_pdo.op_idx_ack >> 8) & 0x80 ) {
+            DPRINTF("[PDO_aux %s] WR Fail\n", get_objd()->name);
+        }
     }
     
     virtual const objd_t * get_objd(void)   { return (sdo_objd == 0) ? 0 : sdo_objd; }
@@ -145,22 +128,27 @@ public:
     // 
     template<class T>
     void on_tx_impl( T& tx_pdo ) {
-        idxs = ( (sdo_objd_wr->subindex & 0xF) << 4) | (sdo_objd_rd->subindex & 0xF);
-        tx_pdo.op_idx_aux = AUX_PDO_OP_WRD << 8 | idxs ;
+        idxs = ( (sdo_objd_wr->subindex & 0x7F) << 8) | (sdo_objd_rd->subindex & 0x7F);
+        tx_pdo.op_idx_aux = idxs ;
         tx_pdo.aux = *(float*)sdo_objd_wr->data;
-        //DPRINTF("PDO_wrd_aux 0x%04X\n", tx_pdo.op_idx_aux);
+        //DPRINTF("PDO_wrd_aux 0x%04X idx_wr %d idx_rd  %d\n",
+        //        tx_pdo.op_idx_aux, sdo_objd_wr->subindex, sdo_objd_rd->subindex);
     };
     
     template<class T>
     void on_rx_impl( T& rx_pdo) {
-        int ret;
-        // check nack
-        ret = check_ackNack(rx_pdo.op_idx_ack, (uint32_t)rx_pdo.aux);
-        // check idx
-        ret |= check_idx(rx_pdo.op_idx_ack, idxs, (uint32_t)rx_pdo.aux);
-        if ( ! ret ) {
+        // check idx_wr error bit
+        if ( (rx_pdo.op_idx_ack >> 8) & 0x80 ) {
+            DPRINTF("[PDO_aux %s] WR Fail\n", get_objd_wr()->name);
+        }
+        // check idx_rd error bit
+        if ( rx_pdo.op_idx_ack & 0x80 ) {
+            DPRINTF("[PDO_aux %s] RD Fail\n", get_objd_rd()->name);
+        } else {
+           
             *(float*)sdo_objd_rd->data = rx_pdo.aux;
         }
+        
     }
 
     const objd_t * get_objd_wr(void)        { return (sdo_objd_wr == 0) ? 0 : sdo_objd_wr; }
@@ -168,7 +156,7 @@ public:
     virtual const objd_t * get_objd(void)   { return get_objd_rd(); }
 
 private:
-    uint8           idxs;
+    uint16          idxs;
     const objd_t    *sdo_objd_wr, *sdo_objd_rd; 
 };
 

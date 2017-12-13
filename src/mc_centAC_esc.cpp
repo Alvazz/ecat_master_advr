@@ -74,7 +74,7 @@ static const iit::ecat::objd_t source_SDOs[] = {
     { 0x8000, 0x17, DTYPE_REAL32,      32, ATYPE_RW,    "directTorqueFeedbackGain",0},
     { 0x8000, 0x18, DTYPE_REAL32,      32, ATYPE_RW,    "sandBoxAngle",         0},
     { 0x8000, 0x19, DTYPE_REAL32,      32, ATYPE_RW,    "sandBoxFriction",      0},
-    
+    { 0x8000, 0x1a, DTYPE_REAL32,      32, ATYPE_RW,    "posRefFilterFreq",     0},
 
     // SD0 0x8001
     { 0x8001, 0x1,  DTYPE_VISIBLE_STRING,   64, ATYPE_RO, "m3_fw_ver" ,         0},
@@ -92,9 +92,14 @@ static const iit::ecat::objd_t source_SDOs[] = {
     { 0x8001, 0xd,  DTYPE_REAL32,           32, ATYPE_RO, "motor_temp",         0},
     { 0x8001, 0xe,  DTYPE_REAL32,           32, ATYPE_RO, "maxLimitedCurr",     0},
     { 0x8001, 0xf,  DTYPE_REAL32,           32, ATYPE_RO, "torqueSensTemp",     0},
-    { 0x8001, 0x10, DTYPE_UNSIGNED16,       16, ATYPE_RW, "DacChA",             0},
-    { 0x8001, 0x11, DTYPE_UNSIGNED16,       16, ATYPE_RW, "DacChB",             0},
-
+    { 0x8001, 0x10, DTYPE_REAL32,           32, ATYPE_RO, "sandBoxHysteresis",  0},
+    { 0x8001, 0x11, DTYPE_UNSIGNED16,       16, ATYPE_RW, "DacChA",             0},
+    { 0x8001, 0x12, DTYPE_UNSIGNED16,       16, ATYPE_RW, "DacChB",             0},
+    { 0x8001, 0x13, DTYPE_UNSIGNED16,       16, ATYPE_RW, "motorVelArrayDim",   0},
+    { 0x8001, 0x14, DTYPE_UNSIGNED16,       16, ATYPE_RO, "torqueCalibArrayDim",0},
+    { 0x8001, 0x15, DTYPE_REAL32,           32, ATYPE_RO, "posRefFiltAcoeff",   0},
+    { 0x8001, 0x16, DTYPE_REAL32,           32, ATYPE_RO, "posRefFiltBcoeff",   0},
+    
     // SD0 0x8002
     { 0x8002, 0x1, DTYPE_REAL32,      32, ATYPE_RO, "pos_ref_fb",               0},
     { 0x8002, 0x2, DTYPE_REAL32,      32, ATYPE_RO, "iq_ref_fb",                0},
@@ -106,7 +111,12 @@ static const iit::ecat::objd_t source_SDOs[] = {
     { 0x8002, 0x8, DTYPE_REAL32,      32, ATYPE_RO, "board_temp_fb",            0},
     { 0x8002, 0x9, DTYPE_REAL32,      32, ATYPE_RO, "motor_temp_fb",            0},
     { 0x8002, 0xa, DTYPE_REAL32,      32, ATYPE_RO, "i_batt_fb",                0},
-    { 0x8002, 0xb, DTYPE_REAL32,      32, ATYPE_RW, "iq_offset",                0},
+    { 0x8002, 0xb, DTYPE_REAL32,      32, ATYPE_RO, "motor_vel_filt",           0},
+    { 0x8002, 0xc, DTYPE_REAL32,      32, ATYPE_RO, "motor_encoder",            0},
+    { 0x8002, 0xd, DTYPE_REAL32,      32, ATYPE_RO, "link_encoder",             0},
+    { 0x8002, 0xe, DTYPE_REAL32,      32, ATYPE_RO, "deflection_encoder",       0},
+    { 0x8002, 0xf, DTYPE_REAL32,      32, ATYPE_RO, "position_ref_filtered",    0},
+    { 0x8002, 0x10,DTYPE_REAL32,      32, ATYPE_RW, "iq_offset",                0},
 
     {0, 0, 0, 0, 0, 0, 0 }
 
@@ -175,6 +185,7 @@ void CentAcESC::init_SDOs ( void ) {
     SDOs[i++].data = ( void* ) &CentAcESC::sdo.directTorqueFeedbackGain;
     SDOs[i++].data = ( void* ) &CentAcESC::sdo.sandBoxAngle;
     SDOs[i++].data = ( void* ) &CentAcESC::sdo.sandBoxFriction;
+    SDOs[i++].data = ( void* ) &CentAcESC::sdo.posRefFilterFreq;
     
     // 0x8001
     SDOs[i++].data = ( void* ) &CentAcESC::sdo.m3_fw_ver;
@@ -192,8 +203,13 @@ void CentAcESC::init_SDOs ( void ) {
     SDOs[i++].data = ( void* ) &CentAcESC::sdo.motor_temp;
     SDOs[i++].data = ( void* ) &CentAcESC::sdo.maxLimitedCurr;
     SDOs[i++].data = ( void* ) &CentAcESC::sdo.torqueSensTemp;
+    SDOs[i++].data = ( void* ) &CentAcESC::sdo.sandBoxHysteresis;
     SDOs[i++].data = ( void* ) &CentAcESC::sdo.DacChA;
     SDOs[i++].data = ( void* ) &CentAcESC::sdo.DacChB;
+    SDOs[i++].data = ( void* ) &CentAcESC::sdo.motorVelArrayDim;
+    SDOs[i++].data = ( void* ) &CentAcESC::sdo.torqueCalibArrayDim;
+    SDOs[i++].data = ( void* ) &CentAcESC::sdo.posRefFiltAcoeff;
+    SDOs[i++].data = ( void* ) &CentAcESC::sdo.posRefFiltBcoeff;    
     
     // 0x8002
     SDOs[i++].data = ( void* ) &CentAcESC::sdo.pos_ref_fb;
@@ -206,6 +222,11 @@ void CentAcESC::init_SDOs ( void ) {
     SDOs[i++].data = ( void* ) &CentAcESC::sdo.board_temp_fb;
     SDOs[i++].data = ( void* ) &CentAcESC::sdo.motor_temp_fb;
     SDOs[i++].data = ( void* ) &CentAcESC::sdo.i_batt_fb;
+    SDOs[i++].data = ( void* ) &CentAcESC::sdo.motor_vel_filt;
+    SDOs[i++].data = ( void* ) &CentAcESC::sdo.Motor_Encoder;
+    SDOs[i++].data = ( void* ) &CentAcESC::sdo.Link_Encoder;
+    SDOs[i++].data = ( void* ) &CentAcESC::sdo.Deflection_Encoder;
+    SDOs[i++].data = ( void* ) &CentAcESC::sdo.position_ref_filtered;
     SDOs[i++].data = ( void* ) &CentAcESC::sdo.iq_offset;
     
     // end marker

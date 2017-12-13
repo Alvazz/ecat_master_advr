@@ -17,6 +17,8 @@
 
 #include <yaml-cpp/yaml.h>
 
+#define _MK_STR(a) static const std::string a ( #a )
+
 #define DEG2RAD(X)  ((float)X*M_PI)/180.0
 
 // ET1100 gpio
@@ -34,7 +36,7 @@
 #define CTRL_SET_IMPED_MODE     0x00D4
 #define CTRL_SET_POS_MODE       0x003B
 #define CTRL_SET_POS_LINK_MODE  0x003C
-#define CTRL_SET_VEL_MODE       0x0037
+#define CTRL_SET_VEL_MODE       0x0071 // NOTE used to be 0x0037
 #define CTRL_SET_VOLT_MODE      0x0039
 #define CTRL_SET_CURR_MODE      0x00CC
 
@@ -50,6 +52,8 @@
 #define CTRL_LED_OFF            0x0091
 #define CTRL_SAND_BOX_ON        0x0079
 #define CTRL_SAND_BOX_OFF       0x0097
+#define CTRL_POS_REF_FILTER_ON  0x009E
+#define CTRL_POS_REF_FILTER_OFF 0x00E9
 
 //#define CTRL_ALIGN_ENCODERS		0x00B2
 #define CTRL_SET_ZERO_POSITION  0x00AB
@@ -100,6 +104,7 @@ enum Board_type : uint32_t {
     FT6             = 0x20,
     FOOT_SENSOR     = 0x21,
     SKIN_SENSOR     = 0x22,
+    FOOT_SENS_10x5  = 0x23,
     // power&battery 
     POW_BOARD       = 0x30,
     POW_CMN_BOARD   = 0x31,
@@ -440,7 +445,7 @@ inline std::ostream& operator<< (std::ostream& os, const McEscPdoTypes::pdo_rx& 
 
 inline int check_cmd_ack ( uint16_t cmd, uint16_t ack ) {
     if ( ack == ( ( cmd & 0x00FF ) | CTRL_CMD_DONE ) ) {
-        //DPRINTF ( "DONE 0x%04X\n", cmd );
+        DPRINTF ( "DONE 0x%04X\n", cmd );
         return EC_BOARD_OK;
     } else if ( ack == ( ( cmd & 0x00FF ) | CTRL_CMD_ERROR ) ) {
         DPRINTF ( "FAIL 0x%04X\n", cmd );

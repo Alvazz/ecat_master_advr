@@ -73,6 +73,8 @@ struct CentAcEscSdoTypes {
     float       directTorqueFeedbackGain;
     float       sandBoxAngle;
     float       sandBoxFriction;
+    float       posRefFilterFreq;
+    float       PDOloopTimeSec;
     
     // ram
     char        m3_fw_ver[8];
@@ -90,8 +92,13 @@ struct CentAcEscSdoTypes {
     float       motor_temp;
     float       maxLimitedCurr;
     float       torqueSensTemp;
-    float       DacChA;
-    float       DacChB;
+    float       sandBoxHysteresis;
+    uint16_t    DacChA;
+    uint16_t    DacChB;
+    uint16_t    motorVelArrayDim;
+    uint16_t    torqueCalibArrayDim;
+    float       posRefFiltAcoeff;
+    float       posRefFiltBcoeff;
     
     // aux pdo
     float       pos_ref_fb;
@@ -99,11 +106,16 @@ struct CentAcEscSdoTypes {
     float       iq_out_fb;
     float       id_ref_fb;
     float       id_out_fb;
-    float       torque_no_average;
-    float       torque_no_calibrated;
+    float       torque_no_average;          // torque read (not averaged)
+    float       torque_no_calibrated;       // torque read without calibration
     float       board_temp_fb;
     float       motor_temp_fb;
     float       i_batt_fb;
+    float       motor_vel_filt;
+    float       Motor_Encoder;
+    float       Link_Encoder;
+    float       Deflection_Encoder;
+    float       position_ref_filtered;
     float       iq_offset;
 
 };
@@ -435,8 +447,8 @@ public :
         try {
             float max_cur = node_cfg["max_current_A"].as<float>();
             writeSDO_byname ( "Max_cur", max_cur );
-        } catch ( YAML::KeyNotFound &e ) {  }
-
+        } catch ( YAML::Exception &e ) {  }
+        
         // set filename with robot_id
         log_filename = std::string ( "/tmp/CentAcESC_"+std::to_string ( sdo.Joint_robot_id ) +"_log.txt" );
 
@@ -473,7 +485,14 @@ public :
 
         try {
             set_ctrl_status_X ( this, CTRL_POWER_MOD_OFF );
-            
+
+            // set posRefFilter OFF when  CTRL_POWER_MOD_OFF
+            try {
+                bool enable_pos_filter = node_cfg["enable_pos_filter"].as<bool>();
+                if ( enable_pos_filter ) { set_ctrl_status_X ( this, CTRL_POS_REF_FILTER_ON ); }
+                else { set_ctrl_status_X ( this, CTRL_POS_REF_FILTER_OFF ); }
+            } catch ( YAML::Exception &e ) { DPRINTF("%s\n", e.what()); }
+
             // set tx_pdo.gainP
             // pdo gains will be used in OP
             
@@ -527,7 +546,11 @@ public :
             handle_fault();
 
             // set sandbox activation 
-            set_ctrl_status_X ( this, CTRL_SAND_BOX_ON );
+            try {
+                bool enable_sandbox = node_cfg["enable_sandbox"].as<bool>();
+                if ( enable_sandbox ) { set_ctrl_status_X ( this, CTRL_SAND_BOX_ON ); }
+                else { set_ctrl_status_X ( this, CTRL_SAND_BOX_OFF ); }
+            } catch ( YAML::Exception &e ) {  DPRINTF("%s\n", e.what()); }
             
             // set controller mode
             set_ctrl_status_X ( this, controller_type );
@@ -587,9 +610,9 @@ public :
         fault.all = rx_pdo.fault;
         fault_log.push_back(fault.bit);
         //DPRINTF("[%d]fault 0x%04X\n", Joint_robot_id, fault.all );
-        if ( fault.bit.m3_op_rx_pdo_fail ) {
-            DPRINTF("fault.bit.m3_op_rx_pdo_fail \t [%d]fault 0x%04X\n", sdo.Joint_robot_id, fault.all );
-        }
+//         if ( fault.bit.m3_op_rx_pdo_fail ) {
+//             DPRINTF("fault.bit.m3_op_rx_pdo_fail \t [%d]fault 0x%04X\n", sdo.Joint_robot_id, fault.all );
+//         }
         tx_pdo.fault_ack = fault.all & 0x7FFF;
     }
 
