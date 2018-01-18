@@ -14,7 +14,7 @@
 #include <iit/ecat/advr/pipes.h>
 #include <iit/ecat/utils.h>
 
-//#include <iit/advr/trajectory.h>
+#include <iit/ecat/advr/lxm32i_reg.h>
 
 #include <protobuf/ecat_pdo.pb.h>
 
@@ -25,6 +25,10 @@ namespace iit {
 namespace ecat {
 namespace advr {
 
+#define RX_ELEM_CNT 6
+#define TX_ELEM_CNT 3  
+
+    
 #define _MK_STR(a) static const std::string a ( #a )
 
 //static const std::string _DCOMstatus( "_DCOMstatus");
@@ -35,10 +39,6 @@ _MK_STR(_p_dif);
 _MK_STR(_tq_act);
 _MK_STR(_LastError);
 _MK_STR(_IO_act);
-
-
-std::vector<std::string> const rd_pdos = { _DCOMstatus, _DCOMopmd_act, _p_act, _p_dif, _tq_act, _LastError, _IO_act };
-std::vector<std::string> const rd_sdos = { };
 
 _MK_STR(DCOMcontrol);
 _MK_STR(DCOMopmode);
@@ -51,163 +51,69 @@ _MK_STR(PTtq_target);
 _MK_STR(IO_DQ_set);
 _MK_STR(JOGactivate);
 
+_MK_STR(CompParSyncMot); 
+_MK_STR(MOD_enable); 
+_MK_STR(LimQStopReact); 
+_MK_STR(IOsigRespOfPS); 
+_MK_STR(CTRL1_KFPp); 
+_MK_STR(CTRL2_KFPp);
 _MK_STR(ScalePOSdenom);
 _MK_STR(ScalePOSnum);
-_MK_STR(MAX_Pv);
 
 _MK_STR(HMmethod);
 _MK_STR(HMp_setP);
 
-
-std::vector<std::string> const wr_pdos = {
-    DCOMcontrol, DCOMopmode, PPp_target, PPv_target, RAMP_v_acc, RAMP_v_dec,
-    PVv_target, PTtq_target, IO_DQ_set, JOGactivate
-};
-std::vector<std::string> const wr_sdos = { HMmethod, HMp_setP};
-
 _MK_STR(RxPdoMapCnt);
 _MK_STR(RxPdoMap);
+_MK_STR(RxElemCnt);
 _MK_STR(RPdo1);
 _MK_STR(RPdo2);
 _MK_STR(RPdo3);
 _MK_STR(RPdo4);
 _MK_STR(RPdo5);
 _MK_STR(RPdo6);
-_MK_STR(RPdo7);
-_MK_STR(RPdo8);
-_MK_STR(RPdo9);
-_MK_STR(RPdo10);
-std::vector<std::string> const rpdos = { RPdo1, RPdo2, RPdo3, RPdo4, RPdo5, RPdo6, RPdo7, RPdo8, RPdo9, RPdo10 };
-
-
 _MK_STR(TxPdoMapCnt);
 _MK_STR(TxPdoMap);
+_MK_STR(TxElemCnt);
 _MK_STR(TPdo1);
 _MK_STR(TPdo2);
 _MK_STR(TPdo3);
 _MK_STR(TPdo4);
 _MK_STR(TPdo5);
-_MK_STR(TPdo6);
-_MK_STR(TPdo7);
-_MK_STR(TPdo8);
-std::vector<std::string> const tpdos = { TPdo1, TPdo2, TPdo3, TPdo4, TPdo5, TPdo6, TPdo7, TPdo8 };
 
-
-std::vector<std::string> const pdo_map = { RxPdoMapCnt, RxPdoMap, TxPdoMapCnt, TxPdoMap };
-
-
-#define DUMPWNAME(os, name, a, d) \
-    do { (os) << (name) << "=" << (a) << d; } while(0)
-        
-#define DUMP(os, a, d) DUMPWNAME((os), #a, (a), (d))  
-
-        
-// Bits 0, 1, 2, 3, and 5, 6 of the DCOMstatus parameter provide information on the operating state.
-        
-struct DCOM_STATUS {
-
-    uint16_t  b0_ReadyToSwitchOn:1;
-    uint16_t  b1_SwitchedOn:1;
-    uint16_t  b2_OperationEnabled:1;
-    uint16_t  b3_Fault:1;
-    uint16_t  b4_VoltageEnabled:1;
-    uint16_t  b5_QuickStop:1;
-    uint16_t  b6_SwtchedOnDisabled:1;
-    uint16_t  b7_warning:1;
-    uint16_t  b8_halt_request_active:1;
-    uint16_t  b9_remote:1;
-    uint16_t  b10_target_reached:1;
-    uint16_t  b11:1;
-    uint16_t  b12_operating_mode_specific:1;
-    uint16_t  b13_x_err:1;
-    uint16_t  b14_x_end:1;
-    uint16_t  b15_ref_ok:1;
-    
-    std::ostream& dump ( std::ostream& os, const std::string delim ) const {
-    
-        DUMP( os, b0_ReadyToSwitchOn, delim );
-        DUMP( os, b1_SwitchedOn, delim );
-        DUMP( os, b2_OperationEnabled, delim );
-        DUMP( os, b3_Fault, delim );
-        DUMP( os, b4_VoltageEnabled, delim );
-        DUMP( os, b5_QuickStop, delim );
-        DUMP( os, b6_SwtchedOnDisabled, delim );
-        DUMP( os, b7_warning, delim );
-        DUMP( os, b8_halt_request_active, delim );
-        DUMP( os, b9_remote, delim );
-        DUMP( os, b10_target_reached, delim );
-        DUMP( os, b11, delim );
-        DUMP( os, b12_operating_mode_specific, delim );
-        DUMP( os, b13_x_err, delim );
-        DUMP( os, b14_x_end, delim );
-        DUMP( os, b15_ref_ok, delim );
-        return os;
-        
-    }
-    
-    void fprint ( FILE *fp ) {
-        std::ostringstream oss;
-        dump(oss,"\t");
-        fprintf ( fp, "%s", oss.str().c_str() );
-    }
-    int sprint ( char *buff, size_t size ) {
-        std::ostringstream oss;
-        dump(oss,"\t");
-        return snprintf ( buff, size, "%s", oss.str().c_str() );
-    }
-       
+std::vector<std::string> const rpdos = {
+    RPdo1, RPdo2, RPdo3, RPdo4, RPdo5, RPdo6
+};
+std::vector<std::string> const tpdos = {
+    TPdo1, TPdo2, TPdo3,
+    //TPdo4, TPdo5,
 };
 
-// Bits 0, 1, 2, 3 and 7 of the parameter DCOMcontrol allow you to switch between the operating states.
+std::vector<std::string> const rd_pdos = { 
+    _DCOMstatus, _DCOMopmd_act, _p_act,
+    //_p_dif, _tq_act  
+};
 
-struct DCOM_CONTROL {
-
-    uint16_t  b0_SwitchOn:1;
-    uint16_t  b1_EnableVoltage:1;
-    uint16_t  b2_QuickStop:1;
-    uint16_t  b3_EnableOperation:1;
-    uint16_t  b4_:1;
-    uint16_t  b5_:1;
-    uint16_t  b6_:1;
-    uint16_t  b7_FaultReset:1;
-    uint16_t  b8_Halt:1;
-    uint16_t  b9_ChangeOnSetpoint:1;
-    uint16_t  _reserved:6;
-    
-    std::ostream& dump ( std::ostream& os, const std::string delim ) const {
-    
-        DUMP( os, b0_SwitchOn, delim );
-        DUMP( os, b1_EnableVoltage, delim );
-        DUMP( os, b2_QuickStop, delim );
-        DUMP( os, b3_EnableOperation, delim );
-        DUMP( os, b7_FaultReset, delim );
-        DUMP( os, b8_Halt, delim );
-        DUMP( os, b9_ChangeOnSetpoint, delim );
-        return os;
-        
-    }    
-    void fprint ( FILE *fp ) {
-        std::ostringstream oss;
-        dump(oss,"\t");
-        fprintf ( fp, "%s", oss.str().c_str() );
-    }
-    int sprint ( char *buff, size_t size ) {
-        std::ostringstream oss;
-        dump(oss,"\t");
-        return snprintf ( buff, size, "%s", oss.str().c_str() );
-    }
+std::vector<std::string> const wr_pdos = {
+    DCOMcontrol, DCOMopmode,
+    PPp_target, PPv_target, RAMP_v_acc, RAMP_v_dec,
 };
 
 
-typedef union{
-    uint16_t            all;
-    struct DCOM_CONTROL  dcom_control;
-} dcom_control_t;
 
-typedef union{
-    uint16_t            all;
-    struct DCOM_STATUS  dcom_status;
-} dcom_status_t;
+std::vector<std::string> const rd_sdos = { 
+    RxPdoMapCnt, RxPdoMap, TxPdoMapCnt, TxPdoMap, 
+//     CompParSyncMot, MOD_enable, LimQStopReact,
+//     IOsigRespOfPS, CTRL1_KFPp, CTRL2_KFPp,
+    ScalePOSdenom, ScalePOSnum,
+    HMmethod, HMp_setP,  
+};
+
+std::vector<std::string> const wr_sdos= { };
+
+
+
+        
 
 
 class LXM32iEscPdoTypes {
@@ -216,18 +122,20 @@ public:
     
     // TX  slave_input -- master output
     struct pdo_tx {
-        //uint8_t _pdo_tx[64];
         dcom_control_t  DCOMcontrol;
         uint8_t         DCOMopmode;
         int32_t         PPp_target;
         uint32_t        PPv_target;
         uint32_t        RAMP_v_acc;
         uint32_t        RAMP_v_dec;
-        int32_t         PVv_target;
-        int16_t         PTtq_target;
-        uint16_t        IO_DQ_set;
-        uint16_t        JOGactivate;
-
+        // 19 bytes
+        //int32_t         PVv_target;
+        //int16_t         PTtq_target;
+        // 25 bytes
+        //uint16_t        IO_DQ_set;
+        //uint16_t        JOGactivate;
+        // 29  bytes
+        
     std::ostream& dump ( std::ostream& os, const std::string delim ) const {
         DUMP( os, PPp_target, delim );
         DUMP( os, PPv_target, delim );
@@ -243,25 +151,26 @@ public:
 
     // RX  slave_output -- master input
     struct pdo_rx {
-        //uint8_t _pdo_rx[64];
         dcom_status_t   _DCOMstatus;
         uint8_t         _DCOMopmd_act;
         int32_t         _p_act;
-        int32_t         _p_dif;
-        int32_t         _tq_act;
-        uint16_t        _LastError;
-        uint16_t        _IO_act;
+        // 7 bytes
+        //int32_t         _p_dif;
+        //int16_t         _tq_act;
+        // 13 bytes
+        //uint16_t        _LastError;
+        //uint16_t        _IO_act;
+        // 17 bytes
         
     std::ostream& dump ( std::ostream& os, const std::string delim ) const {
         _DCOMstatus.dcom_status.dump(os,delim);
         os << "0x" << std::hex << _DCOMstatus.all << std::dec << delim;
         os << "_DCOMopmd_act=" << (int)_DCOMopmd_act << std::dec << delim;
-        //DUMP( os, _DCOMopmd_act, delim );
         DUMP( os, _p_act, delim );
-        DUMP( os, _p_dif, delim );
-        DUMP( os, _tq_act, delim );
-        DUMP( os, _LastError, delim );
-        DUMP( os, _IO_act, delim );
+//        DUMP( os, _p_dif, delim );
+//        DUMP( os, _tq_act, delim );
+//         DUMP( os, _LastError, delim );
+//         DUMP( os, _IO_act, delim );
         //os << std::endl;
         return os;
     }
@@ -277,102 +186,61 @@ public:
         return snprintf ( buff, size, "%s", oss.str().c_str() );
     }
     void pb_toString( std::string * pb_str ) {
-        // !!! NO static declaration
-        iit::advr::Ec_slave_pdo pb_rx_pdo;
-        static struct timespec ts;
-        clock_gettime(CLOCK_MONOTONIC, &ts);
-        // Header
-        pb_rx_pdo.mutable_header()->mutable_stamp()->set_sec(ts.tv_sec);
-        pb_rx_pdo.mutable_header()->mutable_stamp()->set_nsec(ts.tv_nsec);
-        // Type
-        pb_rx_pdo.set_type(iit::advr::Ec_slave_pdo::RX_SKIN_SENS);
-        //
-        pb_rx_pdo.SerializeToString(pb_str);
     }
 
     }  __attribute__ ( ( __packed__ ) );
 };
 
-typedef enum : uint16_t {
-    STOP = 0,
-    POS_SLOW = 1,
-    NEG_SLOW = 2,
-    POS_FAST = 5,
-    NEG_FAST = 6,
-} jogact_t;
-
-typedef enum : int8_t {
-    AUTO = -6,
-    JOG = -1,
-    PPOS = 1,
-    PVEL = 3,
-    PTOR = 4,
-    HOMING = 6,
-    IPOS = 7,
-    CSPOS = 8,
-    CSVEL = 9,
-    CSTOR = 10,
-} opmode_t;
 
 struct LXM32iEscSdoTypes {
     
     uint8_t     rxPdoMapCnt;
     uint16_t    rxPdoMap;
-    
     uint8_t     rxElemCnt;
-    uint32_t    rxMap[10];
-    
+    uint32_t    rxMap[RX_ELEM_CNT];
     uint8_t     txPdoMapCnt;
     uint16_t    txPdoMap;
-
     uint8_t     txElemCnt;
-    uint32_t    txMap[8];
+    uint32_t    txMap[TX_ELEM_CNT];
 
-    uint32_t    MAX_Pv;
-    
+//     int16_t     CompParSyncMot; 
+//     uint16_t    MOD_enable; 
+//     int16_t     LimQStopReact; 
+//     uint16_t    IOsigRespOfPS; 
+//     uint16_t    CTRL1_KFPp; 
+//     uint16_t    CTRL2_KFPp; 
+
     int32_t     ScalePOSdenom;
     int32_t     ScalePOSnum;
     
     int8_t      HMmethod;
     int32_t     HMp_setP;
+
     
    std::ostream& dump ( std::ostream& os, const std::string delim ) const {
+       int j;
        os << "struct LXM32iEscSdoTypes : ";
-       os << (int)rxPdoMapCnt << delim;
-       os << "0x" << std::hex << rxPdoMap << std::dec << delim;
-       os << (int)txPdoMapCnt << delim;
-       os << "0x" << std::hex << txPdoMap << std::dec << delim;
-       os << PPv_target << delim;
-       os << RAMP_v_acc << delim;
-       os << RAMP_v_dec << delim;
-       os << HMmethod << delim;
-       os << HMmethod << delim;
+       os << "rxPdoMapCnt="  << (int)rxPdoMapCnt << delim;
+       os << "rxPdoMap="     << "0x" << std::hex << rxPdoMap << std::dec << delim;
+       os << "rxElemCnt="    << (int)rxElemCnt << delim;
+       for(j=0;j<RX_ELEM_CNT;j++) {  os << j << "_0x" << std::hex << rxMap[j] << std::dec << delim; }
+       os << "txPdoMapCnt="  << (int)txPdoMapCnt << delim;
+       os << "txPdoMap="     << "0x" << std::hex << txPdoMap << std::dec << delim;
+       os << "txElemCnt="    << (int)txElemCnt << delim;
+       for(j=0;j<TX_ELEM_CNT;j++) { os << j << "_0x" << std::hex << txMap[j] << std::dec << delim; }
+//        os << CompParSyncMot << delim;
+//        os << MOD_enable << delim;
+//        os << LimQStopReact << delim;
+//        os << IOsigRespOfPS << delim;
+//        os << CTRL1_KFPp << delim;
+//        os << CTRL2_KFPp << delim;
+       os << ScalePOSdenom << delim;
+       os << ScalePOSnum << delim;
+       os << (int)HMmethod << delim;
+       os << HMp_setP << delim;
+       return os;
     }
 
-};
-
-
-static struct LXM32iEscSdoTypes yifu_pdomap = {
-    // RxPdo
-    1,
-    0x1600,
-    //6,
-    //{ 0x60400010, 0x60600008, 0x607A0020, 0x60FF0020, 0x60710010, 0x30081110, 0, 0 },
-    //7,
-    //{ 0x60400010, 0x60600008, 0x607A0020, 0x60FF0020, 0x60710010, 0x30081110, 0x301B0910, 0 }, 
-    10,
-    { 0x60400010, 0x60600008, 0x607A0020, 0x60810020, 0x60830020, 0x60840020, 0x60FF0020, 0x60710010, 0x30081110, 0x301B0910 }, 
-    // TxPdo
-    1,
-    0x1A00,
-    7,
-    { 0x60410010, 0x60610008, 0x60640020, 0x60F40020, 0x60770010, 0x603F0010, 0x30080110, 0 },
-    //
-    500,
-    // denom num
-    32768, 1,
-    // homing
-    35, 0,
 };
 
 
@@ -381,19 +249,23 @@ struct LXM32iLogTypes {
     uint64_t    ts;     // ns
     int32_t     pRef;
     int32_t     pAct;
-    int32_t     pDiff;
-    int32_t     tqAct;
-    //LXM32iEscPdoTypes::pdo_rx   rx_pdo;
-
+    int32_t     pDif;
+    int16_t     tqAct;
+        
     void fprint ( FILE *fp ) {
-        fprintf ( fp, "%lu\t%d\t%d\t%d\t%d", ts, pRef, pAct, pDiff, tqAct );
-        //rx_pdo.fprint ( fp );
+        fprintf ( fp, "%lu\t%d\t%d\t%d\t%d", ts, pRef, pAct, pDif, tqAct );
     }
     int sprint ( char *buff, size_t size ) {
-        int l = snprintf ( buff, size, "%lu\t%d\t%d\t%d\t%d", ts, pRef, pAct, pDiff, tqAct );
-        return l; //+ rx_pdo.sprint ( buff+l,size-l );
+        int l = snprintf ( buff, size, "%lu\t%d\t%d\t%d\t%d", ts, pRef, pAct, pDif, tqAct );
+        return l;
     }
 };
+
+
+inline std::ostream& operator<< (std::ostream& os, const LXM32iEscSdoTypes& sdo ) {
+    return sdo.dump(os," ");
+}
+
 
 
 template <typename T>
@@ -422,7 +294,6 @@ class LXM32iESC :
 {
 public:
     typedef BasicEscWrapper<LXM32iEscPdoTypes,LXM32iEscSdoTypes>    Base;
-
     typedef PDO_log<LXM32iLogTypes>                                 Log;
 
 public:
@@ -435,7 +306,6 @@ public:
     virtual ~LXM32iESC ( void ) {
         delete [] SDOs;
         DPRINTF ( "~%s pos %d\n", typeid ( this ).name(), position );
-        print_stat ( s_rtt );
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -453,12 +323,11 @@ public:
 
     int user_loop( const char &c );
 
-    int32_t set_pos_target( int32_t pos );
+    int32_t set_pos_target( float pos );
     
-    //advr::Trj_ptr trj;
+    std::vector<double> trj_Xs, trj_Ys;
     
 private:
-    stat_t      s_rtt;
     objd_t *    SDOs;
   
     pdo_rx_t    prev_rx_pdo;
@@ -492,15 +361,14 @@ inline void LXM32iESC::on_readPDO ( void ) {
     if ( _start_log ) {
         Log::log_t log;
         log.ts = get_time_ns() - _start_log_ts ;
-        //log.rx_pdo  = rx_pdo;
+        log.pAct  = rx_pdo._p_act;
         log.pRef = tx_pdo.PPp_target;
-        log.pAct = rx_pdo._p_act;
-        log.pDiff = rx_pdo._p_dif;
-        log.tqAct = rx_pdo._tq_act;
+        //log.pDif = rx_pdo._p_dif;
+        //log.tqAct = rx_pdo._tq_act;
         push_back ( log );
     }
-
-    xddp_write ( rx_pdo );
+ 
+//     xddp_write ( rx_pdo );
 
 }
 
