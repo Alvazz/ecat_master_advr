@@ -127,13 +127,19 @@ void Ec_Boards_ctrl::factory_board ( void ) {
         // Foot Sensor
         else if ( ec_slave[i].eep_id == FOOT_SENSOR ) {
 
-            make_board<FootSensorESC>(i);
+            make_board<FootSensor_16x8>(i);
+        }
+        ///////////////////////////////////////////////////
+        // Foot Sensor 10x5
+        else if ( ec_slave[i].eep_id == FOOT_SENS_10x5 ) {
+
+            make_board<FootSensor_10x5>(i);
         }
         ///////////////////////////////////////////////////
         // Skin Sensor
         else if ( ec_slave[i].eep_id == SKIN_SENSOR ) {
 
-            make_board<SkinSensorESC>(i);
+            make_board<SkinSensor_8x3>(i);
         }
         ///////////////////////////////////////////////////
         // IMU VN Sensor
@@ -228,9 +234,9 @@ int Ec_Boards_ctrl::recv_from_slaves ( ec_timing_t &timing ) {
     return EC_BOARD_OK;
 }
 
-int Ec_Boards_ctrl::send_to_slaves() {
+int Ec_Boards_ctrl::send_to_slaves(bool write_slaves_pdo) {
 
-    return iit::ecat::send_to_slaves();
+    return iit::ecat::send_to_slaves(write_slaves_pdo);
 }
 
 

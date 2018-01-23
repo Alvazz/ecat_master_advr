@@ -17,6 +17,8 @@
 
 #include <yaml-cpp/yaml.h>
 
+#define _MK_STR(a) static const std::string a ( #a )
+
 #define DEG2RAD(X)  ((float)X*M_PI)/180.0
 
 // ET1100 gpio
@@ -102,6 +104,7 @@ enum Board_type : uint32_t {
     FT6             = 0x20,
     FOOT_SENSOR     = 0x21,
     SKIN_SENSOR     = 0x22,
+    FOOT_SENS_10x5  = 0x23,
     // power&battery 
     POW_BOARD       = 0x30,
     POW_CMN_BOARD   = 0x31,
