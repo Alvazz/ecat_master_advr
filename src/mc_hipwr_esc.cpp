@@ -45,7 +45,7 @@ static const iit::ecat::objd_t source_SDOs[] = {
     { 0x8000, 0xc, DTYPE_REAL32,        32, ATYPE_RW,    "Max_pos"                  ,0  },
     { 0x8000, 0xd, DTYPE_REAL32,        32, ATYPE_RW,    "Max_vel"                  ,0  },
     { 0x8000, 0xe, DTYPE_REAL32,        32, ATYPE_RW,    "Max_tor"                  ,0  },
-    { 0x8000, 0xf, DTYPE_REAL32,        32, ATYPE_RW,    "Max_cur"                  ,0  },
+    { 0x8000, 0xf, DTYPE_REAL32,        32, ATYPE_RW,    "Max_ref"                  ,0  },
     { 0x8000, 0x10, DTYPE_REAL32,       32, ATYPE_RW,    "Enc_offset"               ,0  },
     { 0x8000, 0x11, DTYPE_REAL32,       32, ATYPE_RO,    "Enc_relative_offset"      ,0  },
     { 0x8000, 0x12, DTYPE_REAL32,       32, ATYPE_RW,    "Calibration_angle"        ,0  },

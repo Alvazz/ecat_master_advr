@@ -312,9 +312,14 @@ public :
         readSDO_byname ( "Max_pos" );
         readSDO_byname ( "Max_vel" );
         readSDO_byname ( "Max_tor" );
-        readSDO_byname ( "Max_cur" );
+        readSDO_byname ( "Max_ref" );
         readSDO_byname ( "link_pos" );
 
+        try {
+            float max_cur = node_cfg["Max_ref"].as<float>();
+            writeSDO_byname ( "Max_ref", max_cur );
+        } catch ( YAML::Exception &e ) {  }
+        
         // set filename with robot_id
         log_filename = std::string ( "/tmp/HpESC_"+std::to_string ( sdo.Joint_robot_id ) +"_log.txt" );
 
