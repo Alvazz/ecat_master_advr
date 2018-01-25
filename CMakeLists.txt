@@ -5,7 +5,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 include(MacroOptionalBuild)
 include(MacroSetcap)
 
-set(CMAKE_CXX_FLAGS     "${CMAKE_CXX_FLAGS} -std=c++11 -O3")
+set(CMAKE_CXX_FLAGS     "${CMAKE_CXX_FLAGS} -std=c++14 -O3")
 set(ENABLE_XENO         CACHE BOOL "OFF")
 set(SOEM_ROOT           $ENV{SOEM_ROOT} CACHE PATH "Base path of the SOEM headers")
 
@@ -46,6 +46,7 @@ set(LIB_SOURCES
     src/pressure_sensor_esc.cpp
     src/imu_Vn_esc.cpp
     src/test_esc.cpp
+    src/lxm32i_esc.cpp
 )
 
 if ( Xenomai_FOUND )
