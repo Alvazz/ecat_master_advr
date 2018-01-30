@@ -417,6 +417,12 @@ public :
             readSDO_byname ( "fault", fault );
             handle_fault();
 
+            set_ctrl_status_X ( this, CTRL_FAN_ON );
+            osal_usleep(100000);
+            set_ctrl_status_X ( this, CTRL_FAN_OFF );
+            osal_usleep(100000);
+            set_ctrl_status_X ( this, CTRL_FAN_ON );
+            
             // set controller mode
             set_ctrl_status_X ( this, controller_type );
 
