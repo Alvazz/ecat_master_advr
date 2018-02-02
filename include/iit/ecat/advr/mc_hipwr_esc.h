@@ -637,8 +637,10 @@ inline int HpESC::read_conf ( std::string conf_key, const YAML::Node & root_cfg 
         _sgn = node_cfg["sign"].as<int>();
         _offset = node_cfg["pos_offset"].as<float>();
         _offset = DEG2RAD ( _offset );
-        // set control mode variable
-        set_control_mode(root_cfg[conf_key]["control_mode"].as<std::string>());
+        if ( node_cfg["control_mode"] ) {
+            // set control mode variable
+            set_control_mode(node_cfg["control_mode"].as<std::string>());
+        }
         // set use pipe variable NOTE true by default
         if(root_cfg["ec_board_ctrl"]["use_pipes"]) {
             use_pipes = root_cfg["ec_board_ctrl"]["use_pipes"].as<bool>();
