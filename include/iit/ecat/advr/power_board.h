@@ -146,7 +146,7 @@ public:
             push_back ( rx_pdo );
         }
 
-        xddp_write ( rx_pdo );
+//         xddp_write ( rx_pdo );
     }
 
     virtual void on_writePDO ( void ) {
@@ -181,7 +181,7 @@ public:
         // we log when receive PDOs
         start_log ( true );
 
-        XDDP_pipe::init( "PowWkm_pos_"+std::to_string ( position ) );
+//         XDDP_pipe::init( "PowWkm_pos_"+std::to_string ( position ) );
         
         osal_timer_start ( &motor_on_timer, 0 );
         readSDO_byname ( "status" );

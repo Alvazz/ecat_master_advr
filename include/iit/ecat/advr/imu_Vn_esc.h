@@ -197,7 +197,9 @@ public:
             push_back ( log );
         }
 
-        xddp_write ( rx_pdo );
+        if( use_pipes ) {
+            xddp_write ( rx_pdo );
+        }
     }
 
     virtual void on_writePDO ( void ) {
@@ -254,8 +256,16 @@ inline int ImuVnESC::init ( const YAML::Node & root_cfg )     {
 
     // we log when receive PDOs
     start_log ( true );
+    
+    // set use pipe variable NOTE true by default
+    if(root_cfg["ec_board_ctrl"]["use_pipes"]) {
+        use_pipes = root_cfg["ec_board_ctrl"]["use_pipes"].as<bool>();
+    }
 
-    XDDP_pipe::init ( "Imu_id_"+std::to_string ( sdo.joint_robot_id ) );
+    if( use_pipes ) {
+        XDDP_pipe::init ( "Imu_id_"+std::to_string ( sdo.joint_robot_id ) );
+    }
+    
 
     return EC_BOARD_OK;
 }
