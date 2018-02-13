@@ -169,7 +169,6 @@ struct PressSensLogTypes {
 template <int _Rows, int _Cols>
 class PressSensESC :
     public BasicEscWrapper<PressSensEscPdoTypes<_Rows,_Cols>, PressSensEscSdoTypes>,
-    //public PDO_log<typename PressSensEscPdoTypes<_Rows,_Cols>::pdo_rx>,
     public PDO_log<PressSensLogTypes<typename PressSensEscPdoTypes<_Rows,_Cols>::pdo_rx>>,
     public XDDP_pipe
 {
@@ -355,8 +354,14 @@ SIGNATURE(int)::init ( const YAML::Node & root_cfg ) {
     // we log when receive PDOs
     Log::start_log ( true );
     
-    
-    XDDP_pipe::init (robot_name+"@PressSens_id_"+std::to_string ( get_robot_id() ) );
+    // set use pipe variable NOTE true by default
+    if(root_cfg["ec_board_ctrl"]["use_pipes"]) {
+        Base::use_pipes = root_cfg["ec_board_ctrl"]["use_pipes"].as<bool>();
+    }
+
+    if ( Base::use_pipes ) {
+        XDDP_pipe::init (robot_name+"@PressSens_id_"+std::to_string ( get_robot_id() ) );
+    }
     
     return EC_BOARD_OK;
 

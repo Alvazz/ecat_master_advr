@@ -60,7 +60,7 @@ public:
     void on_tx_impl( T& tx_pdo ) {
         tx_pdo.op_idx_aux = sdo_objd->subindex & 0x7F;
         tx_pdo.aux = 0;
-        DPRINTF("PDO_aux 0x%04X\n", tx_pdo.op_idx_aux);
+        //DPRINTF("PDO_aux 0x%04X\n", tx_pdo.op_idx_aux);
     };
     
     template<class T>
@@ -94,7 +94,7 @@ public:
     void on_tx_impl( T& tx_pdo ) {
         tx_pdo.op_idx_aux = (sdo_objd->subindex & 0x7F) << 8 ;
         tx_pdo.aux = *(float*)sdo_objd->data;
-        DPRINTF("PDO_aux 0x%04X\n", tx_pdo.op_idx_aux);
+        //DPRINTF("PDO_aux 0x%04X\n", tx_pdo.op_idx_aux);
     };
     
     template<class T>

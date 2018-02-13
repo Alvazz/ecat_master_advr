@@ -251,12 +251,16 @@ public:
 
     virtual int init ( const YAML::Node & root_cfg ) {
 
-        int16_t robot_id = -1;
+        std::string robot_name("void");
+        try {
+            robot_name = root_cfg["ec_boards_base"]["robot_name"].as<std::string>();
+        } catch ( YAML::Exception &e ) {
+        }
 
         try {
             init_SDOs();
             init_sdo_lookup();
-            readSDO_byname ( "Sensor_robot_id", robot_id );
+            readSDO_byname ( "Sensor_robot_id" );
             set_flash_cmd_X ( this, CTRL_REMOVE_TORQUE_OFFS );
 
         } catch ( EscWrpError &e ) {
@@ -290,7 +294,7 @@ public:
         }
         
         if( use_pipes ) {
-            XDDP_pipe::init( "Ft_id_"+std::to_string ( get_robot_id() ) );
+            XDDP_pipe::init( robot_name+"@Ft_id_"+std::to_string ( get_robot_id() ) );
         }
         
         return EC_BOARD_OK;
