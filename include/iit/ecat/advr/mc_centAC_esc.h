@@ -129,55 +129,56 @@ struct PROC_FAULT {
 
 struct BIT_FAULT {
 
-        uint16_t  m3_rxpdo_pos_ref:1;
-        uint16_t  m3_rxpdo_vel_ref:1;
-        uint16_t  m3_rxpdo_tor_ref:1;
-        uint16_t  m3_flag_1:1;
-        uint16_t  m3_fault_hardware:1;
-        uint16_t  m3_params_out_of_range:1;
-        uint16_t  m3_flag_2:1;
-        uint16_t  m3_op_rx_pdo_fail:1;
-        uint16_t  m3_link_enc_error_reading:1;
-        uint16_t  m3_link_enc_hw_error:1;
-        uint16_t  m3_defl_enc_error_reading:1;
-        uint16_t  m3_defl_enc_hw_error:1;
+    uint16_t  m3_rxpdo_pos_ref:1;
+    uint16_t  m3_rxpdo_vel_ref:1;
+    uint16_t  m3_rxpdo_tor_ref:1;
+    uint16_t  m3_fault_hardware:1;
 
+    uint16_t  m3_params_out_of_range:1;
+    uint16_t  m3_torque_array_not_loaded:1;
+    uint16_t  m3_op_rx_pdo_fail:1;
+    uint16_t  m3_spare_0:1;
 
-        uint16_t  c28_motor_enc_error_reading:1;
-        uint16_t  c28_motor_enc_hw_error:1;
-        uint16_t  c28_Max_cur_limited_for_temp:1;
-        uint16_t  c28_irq_alive:1;
-       
-        std::ostream& dump ( std::ostream& os, const std::string delim ) const {
-       
-            //CHECK_FAULT(os,delim, m3_rxpdo_pos_ref);
-            //do { if(m3_rxpdo_pos_ref) { os << "m3_rxpdo_pos_ref" << delim;} } while(0);
-            os << m3_rxpdo_pos_ref << delim;
-            os << m3_rxpdo_vel_ref << delim;
-            os << m3_rxpdo_tor_ref << delim;
-            os << m3_fault_hardware << delim;
-            os << m3_params_out_of_range << delim;
-            os << m3_op_rx_pdo_fail << delim;
-            os << m3_link_enc_error_reading << delim;
-            os << m3_link_enc_hw_error << delim;
-            os << m3_defl_enc_error_reading << delim;
-            os << m3_defl_enc_hw_error << delim;
-            os << c28_motor_enc_error_reading << delim;
-            os << c28_motor_enc_hw_error << delim;
-            //os << std::endl;
-            return os;
-        }
-        
-        void fprint ( FILE *fp ) {
-            std::ostringstream oss;
-            dump(oss,"\t");
-            fprintf ( fp, "%s", oss.str().c_str() );
-        }
-        int sprint ( char *buff, size_t size ) {
-            std::ostringstream oss;
-            dump(oss,"\t");
-            return snprintf ( buff, size, "%s", oss.str().c_str() );
-        }
+    uint16_t  m3_link_enc_error:1;
+    uint16_t  m3_defl_enc_error:1;
+    uint16_t  m3_spare_1:1;
+    uint16_t  m3_spare_2:1;
+
+    uint16_t  c28_motor_enc_error:1;
+    uint16_t  c28_v_batt_read_fault:1;
+    uint16_t  c28_Max_cur_limited_for_temp:1;
+    uint16_t  c28_irq_alive:1;
+   
+    std::ostream& dump ( std::ostream& os, const std::string delim ) const {
+    
+        //CHECK_FAULT(os,delim, m3_rxpdo_pos_ref);
+        //do { if(m3_rxpdo_pos_ref) { os << "m3_rxpdo_pos_ref" << delim;} } while(0);
+        os << m3_rxpdo_pos_ref << delim;
+        os << m3_rxpdo_vel_ref << delim;
+        os << m3_rxpdo_tor_ref << delim;
+        os << m3_fault_hardware << delim;
+        os << m3_params_out_of_range << delim;
+        os << m3_torque_array_not_loaded << delim;
+        os << m3_op_rx_pdo_fail << delim;
+        os << m3_link_enc_error << delim;
+        os << m3_defl_enc_error << delim;
+        os << c28_motor_enc_error << delim;
+        os << c28_v_batt_read_fault << delim;
+        os << c28_Max_cur_limited_for_temp << delim;
+        //os << std::endl;
+        return os;
+    }
+    
+    void fprint ( FILE *fp ) {
+        std::ostringstream oss;
+        dump(oss,"\t");
+        fprintf ( fp, "%s", oss.str().c_str() );
+    }
+    int sprint ( char *buff, size_t size ) {
+        std::ostringstream oss;
+        dump(oss,"\t");
+        return snprintf ( buff, size, "%s", oss.str().c_str() );
+    }
         
 };
 
@@ -193,27 +194,16 @@ struct CentAcLogTypes {
 
     uint64_t                ts;         // ns
     float                   pos_ref;
-    uint8_t                 m3_link_enc_error_reading;
-    uint8_t                 m3_link_enc_hw_error;
-    uint8_t                 m3_defl_enc_error_reading;
-    uint8_t                 m3_defl_enc_hw_error;
-    uint8_t                 c28_motor_enc_error_reading;
-    uint8_t                 c28_motor_enc_hw_error;
+    uint8_t                 enc_errors;
     //
     McEscPdoTypes::pdo_rx   rx_pdo;
     
     void fprint ( FILE *fp ) {
-        fprintf ( fp, "%lu\t%f\t%d\t%d\t%d\t%d\t%d\t%d\t", ts, pos_ref,
-                  m3_link_enc_error_reading, m3_link_enc_hw_error,
-                  m3_defl_enc_error_reading, m3_defl_enc_hw_error,
-                  c28_motor_enc_error_reading, c28_motor_enc_hw_error);
+        fprintf ( fp, "%lu\t%f\t%d\t", ts, pos_ref, enc_errors );
         rx_pdo.fprint ( fp );
     }
     int sprint ( char *buff, size_t size ) {
-        int l = snprintf ( buff, size, "%lu\t%f\t%d\t%d\t%d\t%d\t%d\t%d\t", ts, pos_ref,
-                  m3_link_enc_error_reading, m3_link_enc_hw_error,
-                  m3_defl_enc_error_reading, m3_defl_enc_hw_error,
-                  c28_motor_enc_error_reading, c28_motor_enc_hw_error);
+        int l = snprintf ( buff, size, "%lu\t%f\t%d\t", ts, pos_ref, enc_errors );
         return l + rx_pdo.sprint ( buff+l,size-l );
     }
 };
@@ -316,12 +306,7 @@ protected :
             log.pos_ref = centac_esc::M2J ( tx_pdo.pos_ref,_sgn,_offset );
             //
             fault.all = rx_pdo.fault;
-            log.m3_link_enc_error_reading = fault.bit.m3_link_enc_error_reading; 
-            log.m3_link_enc_hw_error = fault.bit.m3_link_enc_hw_error; 
-            log.m3_defl_enc_error_reading = fault.bit.m3_defl_enc_error_reading; 
-            log.m3_defl_enc_hw_error = fault.bit.m3_defl_enc_hw_error; 
-            log.c28_motor_enc_error_reading = fault.bit.c28_motor_enc_error_reading; 
-            log.c28_motor_enc_hw_error = fault.bit.c28_motor_enc_hw_error; 
+            log.enc_errors = (fault.bit.m3_link_enc_error << 0x2) || (fault.bit.m3_defl_enc_error << 0x1) || fault.bit.c28_motor_enc_error;
             rx_pdo.fault &= 0x7FFF; 
             log.rx_pdo  = rx_pdo;
             push_back ( log );

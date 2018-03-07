@@ -233,7 +233,7 @@ int Ec_Boards_ctrl::recv_from_slaves ( ec_timing_t &timing ) {
     // wait for cond_signal
     // ecat_thread sync with DC
     rd_LOCK();
-    int ret = iit::ecat::recv_from_slaves ( &timing );
+    int ret = iit::ecat::recv_from_slaves ( timing );
     rd_UNLOCK();
     if ( ret < 0 ) {
         DPRINTF ( "fail recv_from_slaves\n" );
@@ -271,6 +271,7 @@ int Ec_Boards_ctrl::update_board_firmware ( uint16_t slave_pos, std::string firm
     uint16_t configadr;
     uint16_t flash_cmd;
     uint16_t flash_cmd_ack = 0x0;
+    uint16_t sub_idx;
     int size;
     int tries;
     char firm_ver[16];
@@ -320,11 +321,13 @@ int Ec_Boards_ctrl::update_board_firmware ( uint16_t slave_pos, std::string firm
 
         // erase flash
         flash_cmd = 0x00EE;
+        // fw_ver sub index
+        sub_idx = 0x4;
         if ( mcu_info.compare("m3") == 0 ) { flash_cmd = 0x00E1; }
-        if ( mcu_info.compare("c28") == 0 ) { flash_cmd = 0x00E2; }
+        if ( mcu_info.compare("c28") == 0 ) { flash_cmd = 0x00E2; sub_idx = 0x5; }
 
         memset ( ( void* ) firm_ver, 0, sizeof ( firm_ver ) );
-        wc = ec_SDOread ( slave_pos, 0x8000, 0x4, false, &size, &firm_ver, EC_TIMEOUTRXM * 30 );
+        wc = ec_SDOread ( slave_pos, 0x8000, sub_idx, false, &size, &firm_ver, EC_TIMEOUTRXM * 30 );
         DPRINTF ( "Slave %d bl fw %s\n", slave_pos, firm_ver );
 
         // write sdo flash_cmd
