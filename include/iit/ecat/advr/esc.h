@@ -34,17 +34,12 @@
 #define CTRL_SET_DIRECT_MODE    0x004F
 
 #define CTRL_SET_IMPED_MODE     0x00D4
-#define CTRL_SET_POS_MODE       0x003B
+#define CTRL_SET_POS_MOTOR_MODE 0x003B
 #define CTRL_SET_POS_LINK_MODE  0x003C
 #define CTRL_SET_VEL_MODE       0x0071 // NOTE used to be 0x0037
 #define CTRL_SET_VOLT_MODE      0x0039
 #define CTRL_SET_CURR_MODE      0x00CC
 
-#define CTRL_SET_MIX_POS_MODE   0x003C
-#define CTRL_SET_MIX_POS_MODE_2 0x003D
-#define CTRL_SET_POS_MOT_MODE   0x005C
-#define CTRL_SET_POS_LNK_MODE   0x005D
-#define CTRL_SET_POS_LNK_ERR    0x005E
 
 #define CTRL_FAN_ON             0x0026
 #define CTRL_FAN_OFF            0x0062
@@ -63,8 +58,9 @@
 
 #define FLASH_SAVE              0x0012
 
-#define CTRL_CMD_DONE			0x7800
-#define CTRL_CMD_ERROR			0xAA00
+#define CTRL_CMD_DONE           0x7800
+#define CTRL_CMD_ERROR          0xAA00
+#define CTRL_CMD_WORKING        0xD000
 
 ///////////////////////////////////////////////////
 // power board definitions
@@ -125,6 +121,16 @@ enum Board_type : uint32_t {
 
 const std::set<uint32_t> esc_F28M36_uc_set = { CENT_AC, POW_F28M36_BOARD, F28M36_TEST };
 const std::set<uint32_t> esc_gpio_boot_set = { CENT_AC, POW_F28M36_BOARD, HI_PWR_AC_MC, HI_PWR_DC_MC, POW_BOARD };
+const std::map<const std::string,uint32_t> controller_type_map = {
+
+    { "00_idle_ctrl",       0x00 },
+    { "3B_motor_pos_ctrl",  0x3B },
+    { "3C_link_pos_ctrl",   0x3C },
+    { "D4_impedance_ctrl",  0xD4 },
+    { "71_motor_speed_ctrl",0x71 },
+    { "CC_current_ctrl",    0xCC },
+
+};
 
 /* Possible error codes returned */
 enum ec_board_ctrl_err: int {
@@ -302,7 +308,7 @@ struct McEscPdoTypes {
     // TX  slave_input -- master output
     struct pdo_tx {
         float       pos_ref;    // rad   
-        int16_t     vel_ref;    // milli rad/s 
+        int16_t     vel_ref;    // mrad/s 
         int16_t     tor_ref;    // centi Nm
         uint16_t    gain_0;      
         uint16_t    gain_1;     
@@ -316,8 +322,8 @@ struct McEscPdoTypes {
 
         std::ostream& dump ( std::ostream& os, const std::string delim ) const {
             os << pos_ref << delim;
-            os << vel_ref << delim;
-            os << tor_ref << delim;
+            os << (float)vel_ref/1000 << delim;
+            os << (float)tor_ref/100 << delim;
             os << gain_0 << delim;
             os << gain_1 << delim;
             os << gain_2 << delim;
@@ -325,6 +331,8 @@ struct McEscPdoTypes {
             os << gain_4 << delim;
             os << std::hex << fault_ack << std::dec << delim;
             os << ts << delim;
+            os << op_idx_aux << delim;
+            os << aux << delim;
             //os << std::endl;
             return os;
         }
@@ -357,7 +365,7 @@ struct McEscPdoTypes {
         std::ostream& dump ( std::ostream& os, const std::string delim ) const {
             os << link_pos << delim;
             os << motor_pos << delim;
-            os << (float)link_vel/1000 << delim;
+            os << (float)link_vel/1000 << delim;    
             os << (float)motor_vel/1000 << delim;
             os << torque << delim;
             os << ((temperature>>8)&0xFF) << delim;

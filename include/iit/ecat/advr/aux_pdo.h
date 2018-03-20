@@ -51,8 +51,14 @@ public:
 class PDO_rd_aux : public PDO_aux {
 public:
     PDO_rd_aux(): sdo_objd(NULL) {}
-    PDO_rd_aux( const objd_t * sdo_obj_data ): sdo_objd( sdo_obj_data )     { assert( sdo_objd != 0 ); } 
-    PDO_rd_aux( const PDO_rd_aux& rhs ): sdo_objd( rhs.sdo_objd )           { assert( sdo_objd != 0 ); }
+    PDO_rd_aux( const objd_t * sdo_obj_data ): sdo_objd( sdo_obj_data ) {
+        assert( sdo_objd != 0 );
+        DPRINTF("[PDO_rd_aux] %s 0x%04X:%d\n",
+                get_objd()->name, get_objd()->index, get_objd()->subindex);
+    } 
+    PDO_rd_aux( const PDO_rd_aux& rhs ): sdo_objd( rhs.sdo_objd ) {
+        assert( sdo_objd != 0 );
+    }
     //
     // these template methods expect [rx/tx]_pdo struct with op_idx_aux/op_idx_ack and aux fields
     // 
@@ -85,7 +91,11 @@ private:
 class PDO_wr_aux : public PDO_aux {
 public:
     PDO_wr_aux(): sdo_objd(NULL) {}
-    PDO_wr_aux( const objd_t * sdo_obj_data ): sdo_objd( sdo_obj_data )     { assert( sdo_objd != 0 && sdo_objd->access == ATYPE_RW ); }
+    PDO_wr_aux( const objd_t * sdo_obj_data ): sdo_objd( sdo_obj_data ) {
+        assert( sdo_objd != 0 && sdo_objd->access == ATYPE_RW );
+        DPRINTF("[PDO_wr_aux] %s 0x%04X:%d\n",
+                get_objd()->name, get_objd()->index, get_objd()->subindex);        
+    }
     PDO_wr_aux( const PDO_wr_aux& rhs ): sdo_objd( rhs.sdo_objd )           { assert( sdo_objd != 0 && sdo_objd->access == ATYPE_RW ); } 
     //
     // these template methods expect [rx/tx]_pdo struct with op_idx_aux/op_idx_ack and aux fields
@@ -119,7 +129,12 @@ public:
     PDO_wrd_aux(): sdo_objd_wr(NULL),sdo_objd_rd(NULL) {}
     PDO_wrd_aux( const objd_t * sdo_objd_wr, const objd_t * sdo_objd_rd ):
         sdo_objd_wr( sdo_objd_wr ),
-        sdo_objd_rd( sdo_objd_rd )      { assert ( sdo_objd_wr != 0 && sdo_objd_rd != 0 ); }
+        sdo_objd_rd( sdo_objd_rd ) { 
+            assert ( sdo_objd_wr != 0 && sdo_objd_rd != 0 );
+            DPRINTF("[PDO_wrd_aux] wr %s 0x%04X:%d rd %s 0x%04X:%d\n",
+                    get_objd_wr()->name, get_objd_wr()->index, get_objd_wr()->subindex,
+                    get_objd_rd()->name, get_objd_rd()->index, get_objd_rd()->subindex);
+        }
     PDO_wrd_aux( const PDO_wrd_aux& rhs ):
         sdo_objd_wr( rhs.sdo_objd_wr ),
         sdo_objd_rd( rhs.sdo_objd_rd )  { assert ( sdo_objd_wr != 0 && sdo_objd_rd != 0 ); }

@@ -363,8 +363,8 @@ public :
         try {
             set_ctrl_status_X ( this, CTRL_POWER_MOD_OFF );
             
-            if ( controller_type == CTRL_SET_POS_MODE ||
-                 controller_type == CTRL_SET_MIX_POS_MODE ) {
+            if ( controller_type == CTRL_SET_POS_MOTOR_MODE ||
+                 controller_type == CTRL_SET_POS_LINK_MODE ) {
 
                 // pdo gains will be used in OP
                 writeSDO_byname ( "PosGainP", gains[0] );
@@ -444,7 +444,7 @@ public :
 
         std::vector<float> gains;
         
-        if ( controller_type == CTRL_SET_POS_MODE ) {
+        if ( controller_type == CTRL_SET_POS_MOTOR_MODE ) {
             if ( node_cfg["pid"]["position"] ) {
                 try {
                     gains = node_cfg["pid"]["position"].as<std::vector<float>>();
@@ -455,10 +455,10 @@ public :
                 }
             }
         } 
-        if ( controller_type == CTRL_SET_MIX_POS_MODE ) {
-            if ( node_cfg["pid"]["mix_position"] ) {
+        if ( controller_type == CTRL_SET_POS_LINK_MODE ) {
+            if ( node_cfg["pid"]["link_position"] ) {
                 try {
-                    gains = node_cfg["pid"]["mix_position"].as<std::vector<float>>();
+                    gains = node_cfg["pid"]["link_position"].as<std::vector<float>>();
                     assert ( gains.size() == 3 );
                 } catch ( std::exception &e ) {
                     DPRINTF ( "Catch Exception in %s ... %s\n", __PRETTY_FUNCTION__, e.what() );

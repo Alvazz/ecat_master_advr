@@ -32,7 +32,15 @@ public:
     }
 
     void push_back ( const log_t & item ) {
-        esc_log.push_back ( item );
+        esc_log.push_back( item );
+    }
+
+    const log_t& back () const {
+        return esc_log.back( );
+    }
+    
+    bool empty() const {
+        return esc_log.empty();
     }
 
 protected:

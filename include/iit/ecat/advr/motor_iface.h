@@ -43,12 +43,14 @@ private:
         return c->readSDO_byname ( name.c_str(), value );
     }
 
-//     template <class C, typename T>
-//     int getSDO_impl(std::string const & name, T & value ) {
-//         C *c = dynamic_cast<C*>(this);
-//         if (!c) { return EC_WRP_NOK; }
-//         return c->getSDO_byname( name.c_str(), value );
-//     }
+    template <class C, typename T>
+    int getSDO_impl(std::string const & name, T & value ) {
+        C *c = dynamic_cast<C*>(this);
+        if (!c) {
+            return EC_WRP_NOK;
+        }
+        return c->getSDO_byname( name.c_str(), value );
+    }
 
     std::string _control_mode;
 
@@ -96,17 +98,26 @@ public:
         return EC_WRP_NOK;
     }
 
-//     template<typename T>
-//     int getSDO(std::string const & name, T & value ) {
-//         if ( am_i_HpESC() ) {
-//             return getSDO_impl<HpESC>(name, value);
-//         } else if ( am_i_LpESC() ) {
-//             return getSDO_impl<LpESC>(name, value);
-//         }
-//         return EC_WRP_NOK;
-//     }
+    template<typename T>
+    int getSDO(std::string const & name, T & value ) {
+        if ( get_ESC_type() == HI_PWR_AC_MC || get_ESC_type() == HI_PWR_DC_MC ) { 
+            return getSDO_impl<HpESC> ( name, value );
+                    
+        } else if ( get_ESC_type() == LO_PWR_DC_MC ) {
+            return getSDO_impl<LpESC> ( name, value );
+            
+        } else if ( get_ESC_type() == CENT_AC ) {
+            return getSDO_impl<CentAcESC> ( name, value );
+            
+        } else {
+            throw EcBoardsError ( EC_BOARD_NOK, "readSDO_impl" );
+        }
+
+        return EC_WRP_NOK;
+    }
 
     virtual int init( const YAML::Node & ) = 0;
+    int start ( void );
     virtual int start ( int controller_type ) = 0;
     virtual int start ( int controller_type, const std::vector<float> &gains ) = 0;
     virtual int stop ( void ) = 0;
@@ -144,6 +155,22 @@ protected:
 };
 
 typedef AbsMotor<McEscPdoTypes> Motor;
+
+template <typename MotorPdoTypes>
+inline int AbsMotor<MotorPdoTypes>::start(void) {
+    
+    auto ctrl_str = get_control_mode();
+    try {
+        uint32_t ctrl_code = controller_type_map.at(ctrl_str);
+        //DPRINTF("ctrl_code %d %s\n", ctrl_code, ctrl_str);
+        // 00_idle go ahead without start controller
+        if ( ! ctrl_code ) return EC_BOARD_OK;
+        else return start( ctrl_code );
+    } catch (const std::out_of_range &e ) {
+        // ctrl_str invalid
+        return EC_BOARD_NOK;
+    }
+};
 
 }
 }

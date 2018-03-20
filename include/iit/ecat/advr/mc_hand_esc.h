@@ -384,7 +384,7 @@ public:
         try {
             set_ctrl_status_X ( this, CTRL_POWER_MOD_OFF );
             
-            if ( controller_type == CTRL_SET_POS_MODE ) {
+            if ( controller_type == CTRL_SET_POS_MOTOR_MODE ) {
                 
                 writeSDO_byname( "pos_gain_P", gains[0] );
                 writeSDO_byname( "pos_gain_I", gains[1] );
@@ -451,7 +451,7 @@ public:
         
         std::vector<float> gains = {0.0, 0.0, 0.0};
         
-        if ( controller_type == CTRL_SET_POS_MODE ) {
+        if ( controller_type == CTRL_SET_POS_MOTOR_MODE ) {
             // use default value read in init()
             gains[0] = sdo.PosGainP;
             gains[1] = sdo.PosGainI;

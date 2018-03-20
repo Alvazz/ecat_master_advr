@@ -24,6 +24,7 @@
 #include <protobuf/ecat_pdo.pb.h>
 
 #include <map>
+#include <bitset>
 
 namespace iit {
 namespace ecat {
@@ -74,7 +75,9 @@ struct CentAcEscSdoTypes {
     float       sandBoxAngle;
     float       sandBoxFriction;
     float       posRefFilterFreq;
-    float       PDOloopTimeSec;
+    float       motorDirectInductance;
+    float       motorQuadratureInductance;
+    float       crossTermCCGain;
     
     // ram
     char        m3_fw_ver[8];
@@ -99,8 +102,21 @@ struct CentAcEscSdoTypes {
     uint16_t    torqueCalibArrayDim;
     float       posRefFiltAcoeff;
     float       posRefFiltBcoeff;
+    uint32_t    motorEncRoughRead;
+    uint32_t    linkEncRoughRead;
+    uint32_t    deflEncRoughRead;
+    float       motorEncBadReadPPM;
+    float       linkEncBadReadPPM;
+    float       deflEncBadReadPPM;
+    uint32_t    absMotorEncWarn;
+    uint32_t    absMotorEncErr;
+    uint32_t    absLinkEncWarn;
+    uint32_t    absLinkEncErr;
+    uint32_t    absDeflEncWarn;
+    uint32_t    absDeflEncErr;
     
-    // aux pdo
+    // RO aux pdo
+    float       rtt;
     float       pos_ref_fb;
     float       iq_ref_fb;
     float       iq_out_fb;
@@ -116,6 +132,16 @@ struct CentAcEscSdoTypes {
     float       Link_Encoder;
     float       Deflection_Encoder;
     float       position_ref_filtered;
+    float       motor_vel_no_filt;
+    float       motor_enc_warn;
+    float       motor_enc_err;
+    float       link_enc_warn;
+    float       link_enc_err;
+    float       defl_enc_warn;
+    float       defl_enc_err;
+    
+    // WR aux pdo
+    float       ts;
     float       iq_offset;
 
 };
@@ -125,47 +151,76 @@ struct PROC_FAULT {
     uint16_t  c28_bits:4;
 };
 
-#define CHECK_FAULT (o,d,x)     do { if(x) { o << x << d;} } while(0)
+/*
+ * ?  fault goes on/off  
+ * !  fault goes off when acknowledge by master
+ * +  power_off, motor become idle
+ * ++ power_off if in impedance, motor become idle 
+ */
 
 struct BIT_FAULT {
 
-    uint16_t  m3_rxpdo_pos_ref:1;
-    uint16_t  m3_rxpdo_vel_ref:1;
-    uint16_t  m3_rxpdo_tor_ref:1;
-    uint16_t  m3_fault_hardware:1;
-
-    uint16_t  m3_params_out_of_range:1;
-    uint16_t  m3_torque_array_not_loaded:1;
-    uint16_t  m3_op_rx_pdo_fail:1;
-    uint16_t  m3_spare_0:1;
-
-    uint16_t  m3_link_enc_error:1;
-    uint16_t  m3_defl_enc_error:1;
-    uint16_t  m3_spare_1:1;
-    uint16_t  m3_spare_2:1;
-
-    uint16_t  c28_motor_enc_error:1;
-    uint16_t  c28_v_batt_read_fault:1;
-    uint16_t  c28_Max_cur_limited_for_temp:1;
-    uint16_t  c28_irq_alive:1;
+    // bits 0..3
+    uint16_t  m3_rxpdo_pos_ref:1;   // ?  
+    uint16_t  m3_rxpdo_vel_ref:1;   // ?
+    uint16_t  m3_rxpdo_tor_ref:1;   // ?
+    uint16_t  m3_fault_hardware:1;  // ! +
+    // bits 4..7
+    uint16_t  m3_params_out_of_range:1;         // !
+    uint16_t  m3_torque_array_not_loaded:1;     // !
+    uint16_t  m3_torque_read_error:1;           // ! ++
+    uint16_t  m3_spare:1;
+    // bits 8, 9
+    /* 20 BAD consecutive sensor readings give error
+     * each GOOD or almost good ( green/orange) reading decrement error counter
+     * each other conditions on reading increment error counter
+     */   
+    uint16_t  m3_link_enc_error:1;  // ? +
+    /* 20 consecutive sensor readings give error
+     * see m3_link_enc_error
+     */
+    uint16_t  m3_defl_enc_error:1;  // ? ++
+    /*
+    The warning bit is set when the temperature is over 60 and released when decrease under 55 degrees.
+    The warning bit is only checked before starting the controller, if is set the controller is not allowed to start.
+    If set during run no action is provided, is only a signal that the system is starting warming.
+    The error bit is set when the temperature is over 70 and released when decrease under 65 degrees.
+    The error bit is always checked, if a temperature error is triggered the system doesn’t start the controller
+    and if is running it stop the controller.
+    For the motor temperature is the same behavior (the warning and error temperature bit are shared)
+    but the temperature limits are different (80 for warning and 90 for error with 5 degrees histeresys) 
+    */
+    // bits 10, 11
+    uint16_t  m3_temperature_warning:1; // ?
+    uint16_t  m3_temperature_error:1;   // ? +
+    // bits 12..15
+    /* 200 consecutive sensor readings give error
+     * see m3_link_enc_error
+     */
+    uint16_t  c28_motor_enc_error:1;    // ? +
+    uint16_t  c28_v_batt_read_fault:1;  // ?
+    uint16_t  c28_spare_0:1;
+    uint16_t  c28_spare_1:1;
    
     std::ostream& dump ( std::ostream& os, const std::string delim ) const {
     
-        //CHECK_FAULT(os,delim, m3_rxpdo_pos_ref);
-        //do { if(m3_rxpdo_pos_ref) { os << "m3_rxpdo_pos_ref" << delim;} } while(0);
-        os << m3_rxpdo_pos_ref << delim;
-        os << m3_rxpdo_vel_ref << delim;
-        os << m3_rxpdo_tor_ref << delim;
-        os << m3_fault_hardware << delim;
-        os << m3_params_out_of_range << delim;
-        os << m3_torque_array_not_loaded << delim;
-        os << m3_op_rx_pdo_fail << delim;
-        os << m3_link_enc_error << delim;
-        os << m3_defl_enc_error << delim;
-        os << c28_motor_enc_error << delim;
-        os << c28_v_batt_read_fault << delim;
-        os << c28_Max_cur_limited_for_temp << delim;
-        //os << std::endl;
+        if(m3_rxpdo_pos_ref)    { os << "m3_rxpdo_pos_ref" << delim; }
+        if(m3_rxpdo_vel_ref)    { os << "m3_rxpdo_vel_ref" << delim; }
+        if(m3_rxpdo_tor_ref)    { os << "m3_rxpdo_tor_ref" << delim; }
+        if(m3_fault_hardware)   { os << "m3_fault_hardware" << delim; }
+        
+        if(m3_params_out_of_range)      { os << "m3_params_out_of_range" << delim; }
+        if(m3_torque_array_not_loaded)  { os << "m3_torque_array_not_loaded" << delim; }
+        if(m3_torque_read_error) { os << "m3_torque_read_out_of_range" << delim; }
+       
+        if(m3_link_enc_error)       { os << "m3_link_enc_error" << delim; }
+        if(m3_defl_enc_error)       { os << "m3_defl_enc_error" << delim; }
+        if(m3_temperature_warning)  { os << "m3_temperature_warning" << delim; }
+        if(m3_temperature_error)    { os << "m3_temperature_error" << delim; }
+        
+        if(c28_motor_enc_error)     { os << "c28_motor_enc_error" << delim; }
+        if(c28_v_batt_read_fault)   { os << "c28_v_batt_read_fault" << delim; }
+        
         return os;
     }
     
@@ -182,28 +237,73 @@ struct BIT_FAULT {
         
 };
 
-typedef union{
+union centAC_fault_t{
     uint16_t all;
-    struct PROC_FAULT proc_fault;
-    struct BIT_FAULT bit;
-} centAC_fault_t;
+    BIT_FAULT bit;
+};
 
 
+inline std::ostream& operator<< (std::ostream& os, const centAC_fault_t& faults) {
+    return faults.bit.dump(os,"\t");
+}
+
+inline std::ostream& check ( std::ostream& os, const std::string delim,
+                             const centAC_fault_t& old, const centAC_fault_t& fault ) {
+  
+    if( fault.bit.m3_rxpdo_pos_ref > old.bit.m3_rxpdo_pos_ref ) { os << "ON  rxpdo_pos_ref" << delim; }
+    if( fault.bit.m3_rxpdo_pos_ref < old.bit.m3_rxpdo_pos_ref ) { os << "OFF rxpdo_pos_ref" << delim; }
+    
+    if( fault.bit.m3_rxpdo_vel_ref > old.bit.m3_rxpdo_vel_ref ) { os << "ON  rxpdo_vel_ref" << delim; }
+    if( fault.bit.m3_rxpdo_vel_ref < old.bit.m3_rxpdo_vel_ref ) { os << "OFF rxpdo_vel_ref" << delim; }
+
+    if( fault.bit.m3_rxpdo_tor_ref > old.bit.m3_rxpdo_tor_ref ) { os << "ON  rxpdo_tor_ref" << delim; }
+    if( fault.bit.m3_rxpdo_tor_ref < old.bit.m3_rxpdo_tor_ref ) { os << "OFF rxpdo_tor_ref" << delim; }
+
+    if( fault.bit.m3_fault_hardware > old.bit.m3_fault_hardware ) { os << "ON  m3_fault_hardware" << delim; }
+    if( fault.bit.m3_fault_hardware < old.bit.m3_fault_hardware ) { os << "OFF m3_fault_hardware" << delim; }
+        
+    if( fault.bit.m3_params_out_of_range > old.bit.m3_params_out_of_range ) { os << "ON  m3_params_out_of_range" << delim; }
+    if( fault.bit.m3_params_out_of_range < old.bit.m3_params_out_of_range ) { os << "OFF m3_params_out_of_range" << delim; }
+
+    if( fault.bit.m3_torque_array_not_loaded > old.bit.m3_torque_array_not_loaded ) { os << "ON  m3_torque_array_not_loaded" << delim; }
+    if( fault.bit.m3_torque_array_not_loaded < old.bit.m3_torque_array_not_loaded ) { os << "OFF m3_torque_array_not_loaded" << delim; }
+
+    if( fault.bit.m3_torque_read_error > old.bit.m3_torque_read_error ) { os << "ON  m3_torque_read_out_of_range" << delim; }
+    if( fault.bit.m3_torque_read_error < old.bit.m3_torque_read_error ) { os << "OFF m3_torque_read_out_of_range" << delim; }
+    
+    if( fault.bit.m3_link_enc_error > old.bit.m3_link_enc_error ) { os << "ON  link_enc_error" << delim; }
+    if( fault.bit.m3_link_enc_error < old.bit.m3_link_enc_error ) { os << "OFF link_enc_error" << delim; }
+
+    if( fault.bit.m3_defl_enc_error > old.bit.m3_defl_enc_error ) { os << "ON  defl_enc_error" << delim; }
+    if( fault.bit.m3_defl_enc_error < old.bit.m3_defl_enc_error ) { os << "OFF defl_enc_error" << delim; }
+
+    if( fault.bit.m3_temperature_warning > old.bit.m3_temperature_warning ) { os << "ON  temperature_warning" << delim; }
+    if( fault.bit.m3_temperature_warning < old.bit.m3_temperature_warning ) { os << "OFF temperature_warning" << delim; }
+
+    if( fault.bit.m3_temperature_error > old.bit.m3_temperature_error ) { os << "ON  temperature_error" << delim; }
+    if( fault.bit.m3_temperature_error < old.bit.m3_temperature_error ) { os << "OFF temperature_error" << delim; }
+    
+    if( fault.bit.c28_motor_enc_error > old.bit.c28_motor_enc_error ) { os << "ON  motor_enc_error" << delim; }
+    if( fault.bit.c28_motor_enc_error < old.bit.c28_motor_enc_error ) { os << "OFF motor_enc_error" << delim; }
+
+    if( fault.bit.c28_v_batt_read_fault > old.bit.c28_v_batt_read_fault ) { os << "ON  c28_v_batt_read_fault" << delim; }
+    if( fault.bit.c28_v_batt_read_fault < old.bit.c28_v_batt_read_fault ) { os << "OFF c28_v_batt_read_fault" << delim; }
+
+}
 
 struct CentAcLogTypes {
 
     uint64_t                ts;         // ns
     float                   pos_ref;
-    uint8_t                 enc_errors;
     //
     McEscPdoTypes::pdo_rx   rx_pdo;
     
     void fprint ( FILE *fp ) {
-        fprintf ( fp, "%lu\t%f\t%d\t", ts, pos_ref, enc_errors );
+        fprintf ( fp, "%lu\t%f\t", ts, pos_ref );
         rx_pdo.fprint ( fp );
     }
     int sprint ( char *buff, size_t size ) {
-        int l = snprintf ( buff, size, "%lu\t%f\t%d\t", ts, pos_ref, enc_errors );
+        int l = snprintf ( buff, size, "%lu\t%f\t", ts, pos_ref );
         return l + rx_pdo.sprint ( buff+l,size-l );
     }
 };
@@ -224,7 +324,7 @@ class CentAcESC :
 public:
     typedef BasicEscWrapper<McEscPdoTypes,CentAcEscSdoTypes>    Base;
     typedef PDO_log<CentAcLogTypes>                             Log;
-    typedef PDO_log<BIT_FAULT>                                  FaultLog;
+    typedef PDO_log<BIT_FAULT>                             FaultLog;
 
     CentAcESC ( const ec_slavet& slave_descriptor ) :
         Base ( slave_descriptor ),
@@ -267,8 +367,6 @@ protected :
 
     virtual void on_readPDO ( void ) {
         
-        centAC_fault_t fault;
-
         if ( rx_pdo.rtt ) {
             rx_pdo.rtt = ( uint16_t ) ( get_time_ns() /1000 - rx_pdo.rtt );
             s_rtt ( rx_pdo.rtt );
@@ -276,12 +374,7 @@ protected :
 
         ///////////////////////////////////////////////////
         // - faults
-        if ( rx_pdo.fault & 0x7FFF ) {
-            handle_fault();
-        } else {
-            // clean any previuos fault ack !!
-            tx_pdo.fault_ack = 0;
-        }
+        handle_fault();
 
         ///////////////////////////////////////////////////
         // - transformation from Motor to Joint
@@ -295,6 +388,9 @@ protected :
             // if pos_ref_fb apply transformation
             if ( ! strcmp( curr_pdo_aux->get_objd()->name, "pos_ref_fb") ) {
                 rx_pdo.aux  = centac_esc::M2J ( rx_pdo.aux,_sgn,_offset );
+            // !! ts&&rtt 
+            } else if ( ! strcmp( curr_pdo_aux->get_objd()->name, "rtt") ) {
+                rx_pdo.aux = (uint16_t)(get_time_ns()/1000) - (uint16_t)rx_pdo.aux;
             }
         }
         
@@ -304,10 +400,6 @@ protected :
             Log::log_t log;
             log.ts      = get_time_ns() - _start_log_ts ;
             log.pos_ref = centac_esc::M2J ( tx_pdo.pos_ref,_sgn,_offset );
-            //
-            fault.all = rx_pdo.fault;
-            log.enc_errors = (fault.bit.m3_link_enc_error << 0x2) || (fault.bit.m3_defl_enc_error << 0x1) || fault.bit.c28_motor_enc_error;
-            rx_pdo.fault &= 0x7FFF; 
             log.rx_pdo  = rx_pdo;
             push_back ( log );
         }
@@ -325,7 +417,8 @@ protected :
 
     virtual void on_writePDO ( void ) {
 
-        tx_pdo.ts = ( uint16_t ) ( get_time_ns() /1000 );
+        tx_pdo.ts = ( uint16_t ) ( get_time_ns()/1000 );
+        sdo.ts = ( uint16_t ) ( get_time_ns()/1000 );
         
         ///////////////////////////////////////////////////
         // pdo_aux 
@@ -337,6 +430,11 @@ protected :
         // NOOOOOOOOOOOO
         // NOT HERE !!! use set_posRef to apply transformation from Joint to Motor
         //tx_pdo.pos_ref = hipwr_esc::J2M(tx_pdo.pos_ref,_sgn,_offset);
+        
+        //std::ostringstream oss;
+        //oss << tx_pdo;
+        //DPRINTF ( "tx_pdo %s\n", oss.str().c_str() );
+            
     }
 
     virtual int on_readSDO ( const objd_t * sdobj )  {
@@ -385,15 +483,17 @@ public :
     virtual int init ( const YAML::Node & root_cfg ) {
 
         std::string robot_name("void");
+        bool read_SDOs = false;
         try {
             robot_name = root_cfg["ec_boards_base"]["robot_name"].as<std::string>();
+            read_SDOs = root_cfg["ec_boards_base"]["read_SDOs"].as<bool>();
         } catch ( YAML::Exception &e ) {
         }
         
         try {
             // !! sgn and offset must set before init_sdo_lookup !!
             init_SDOs();
-            init_sdo_lookup();
+            init_sdo_lookup(read_SDOs);
             
             readSDO_byname ( "Joint_robot_id" );
             readSDO_byname ( "Serial_Number_A" );
@@ -444,6 +544,14 @@ public :
         writeSDO_byname ( "Direct_ref", direct_ref );
         readSDO_byname ( "Direct_ref", direct_ref );
         assert ( direct_ref == 0.0 );
+        
+        // set actual motor position in tx_pdo.pos ref to avoid bit fault
+        float act_position; 
+        readSDO_byname  ( "motor_pos", act_position ); 
+        writeSDO_byname ( "pos_ref", act_position ); 
+        int16_t zero_ref = 0;
+        writeSDO_byname ( "vel_ref", zero_ref );
+        writeSDO_byname ( "tor_ref", zero_ref );        
 
         // we log when receive PDOs
         start_log ( true );
@@ -485,7 +593,7 @@ public :
             // set tx_pdo.gainP
             // pdo gains will be used in OP
             
-            if ( controller_type == CTRL_SET_POS_MODE ) {
+            if ( controller_type == CTRL_SET_POS_MOTOR_MODE ) {
                 // pos_Kp
                 //gain = ( uint16_t ) _p;
                 gain = (uint16_t)gains[0];
@@ -522,7 +630,7 @@ public :
             //readSDO_byname ( "link_pos", act_position );
             readSDO_byname ( "motor_pos", act_position );
             writeSDO_byname ( "pos_ref", act_position );
-            DPRINTF ( "%s\n\tlink_pos %f pos_ref %f\n", __PRETTY_FUNCTION__,
+            DPRINTF ( "%s\n\tmotor_pos %f pos_ref %f\n", __PRETTY_FUNCTION__,
                       act_position,
                       centac_esc::M2J(tx_pdo.pos_ref,_sgn,_offset) );
             oss << tx_pdo;
@@ -558,25 +666,22 @@ public :
 
         std::vector<float> gains;
         
-        if ( controller_type == CTRL_SET_POS_MODE ) {
-            if ( node_cfg["pid"]["position"] ) {
-                try {
-                    gains = node_cfg["pid"]["position"].as<std::vector<float>>();
-                    assert ( gains.size() == 3 );
-                } catch ( std::exception &e ) {
-                    DPRINTF ( "Catch Exception in %s ... %s\n", __PRETTY_FUNCTION__, e.what() );
-                }
+        if ( controller_type == CTRL_SET_POS_MOTOR_MODE ) {
+            try {
+                gains = node_cfg["pid"]["position"].as<std::vector<float>>();
+                assert ( gains.size() == 3 );
+            } catch ( std::exception &e ) {
+                DPRINTF ( "Catch Exception in %s ... %s\n", __PRETTY_FUNCTION__, e.what() );
+                return EC_BOARD_NOK;
             }
         } 
         if ( controller_type == CTRL_SET_IMPED_MODE ) {
-
-            if ( node_cfg["pid"]["impedance"] ) {
-                try {
-                    gains = node_cfg["pid"]["impedance"].as<std::vector<float>>();
-                    assert ( gains.size() == 5 );
-                } catch ( std::exception &e ) {
-                    DPRINTF ( "Catch Exception in %s ... %s\n", __PRETTY_FUNCTION__, e.what() );
-                }
+            try {
+                gains = node_cfg["pid"]["impedance"].as<std::vector<float>>();
+                assert ( gains.size() == 5 );
+            } catch ( std::exception &e ) {
+                DPRINTF ( "Catch Exception in %s ... %s\n", __PRETTY_FUNCTION__, e.what() );
+                return EC_BOARD_NOK;
             }
         } 
 
@@ -586,6 +691,7 @@ public :
 
     virtual int stop ( void ) {
 
+        set_ctrl_status_X ( this, CTRL_FAN_OFF );
         return set_ctrl_status_X ( this, CTRL_POWER_MOD_OFF );
     }
 
@@ -596,13 +702,32 @@ public :
     virtual void handle_fault ( void ) {
 
         centAC_fault_t fault;
+        centAC_fault_t old;
+        std::ostringstream oss;
+        std::ostringstream osss;
+            
         fault.all = rx_pdo.fault;
-        fault_log.push_back(fault.bit);
-        //DPRINTF("[%d]fault 0x%04X\n", Joint_robot_id, fault.all );
-//         if ( fault.bit.m3_op_rx_pdo_fail ) {
-//             DPRINTF("fault.bit.m3_op_rx_pdo_fail \t [%d]fault 0x%04X\n", sdo.Joint_robot_id, fault.all );
-//         }
-        tx_pdo.fault_ack = fault.all & 0x7FFF;
+        active_faults = fault;
+        std::bitset<sizeof(fault)> bs_fault(fault.all);
+        
+        if ( fault_log.empty() ) {
+            fault_log.push_back(fault.bit);
+        }
+        old.bit = fault_log.back();
+
+        // checking faults transition ON->OFF or OFF->ON
+        if ( old.all != fault.all ) {
+            fault_log.push_back(fault.bit);
+            check(oss, "\n\t", old, fault);
+            oss << active_faults;
+            DPRINTF("[%d]fault 0x%04X old 0x%04X\n\t", sdo.Joint_robot_id,
+                fault.all, old.all);
+            DPRINTF("%s\n", oss.str().c_str() );
+
+        }
+        
+        // acknoledge
+        tx_pdo.fault_ack = fault.all;
     }
 
     /////////////////////////////////////////////
@@ -713,8 +838,13 @@ public :
 
         cmd = 0x0085;
         writeSDO_byname ( "ctrl_status_cmd", cmd );
-        DPRINTF ( "run_torque_calibration ... \n");
-        return EC_BOARD_OK;
+        readSDO_byname  ( "ctrl_status_cmd_ack", ack );
+        while ( ack == ( cmd | CTRL_CMD_WORKING ) ) {
+            readSDO_byname  ( "ctrl_status_cmd_ack", ack );
+            DPRINTF ( "run_torque_calibration ... \n");
+            osal_usleep(250000);
+        }
+        return check_cmd_ack(cmd, ack);
     }
 
 private:
@@ -770,11 +900,13 @@ private:
                     for ( auto const aux_name : aux_set ) {
                         pdo_auxes_map[aux_name] = MK_PDO_AUX(PDO_rd_aux,aux_name);
                     }
-                } else if ( aux_type == "wr" ) {
+                }
+                if ( aux_type == "wr" ) {
                     for ( auto const aux_name : aux_set ) {
                         pdo_auxes_map[aux_name] = MK_PDO_AUX(PDO_wr_aux,aux_name);
                     }
-                } else if ( aux_type == "wrd" ) {
+                }
+                if ( aux_type == "wrd" ) {
                     for ( auto const aux_name : aux_set ) {
                         if ( aux_name.rfind("&&") ) {
                             auto wr_name = aux_name.substr(0, aux_name.rfind("&&"));
@@ -782,8 +914,6 @@ private:
                             pdo_auxes_map[aux_name] = MK_PDO_AUX_WRD(PDO_wrd_aux,wr_name,rd_name);
                         }
                     }
-                } else {
-                    
                 }
             }
 
@@ -830,7 +960,8 @@ private:
 
     objd_t * SDOs;
     
-    FaultLog    fault_log;
+    FaultLog        fault_log;
+    centAC_fault_t  active_faults;
     
     iit::advr::Ec_slave_pdo pb_rx_pdo;
             

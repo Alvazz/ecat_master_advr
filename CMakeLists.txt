@@ -21,9 +21,12 @@ endif()
 
 add_subdirectory(protobuf)
 
-# find soem
+# find packeges
 find_package(soem${LIB_TYPE} REQUIRED)
 find_package(iitecat_iface${LIB_TYPE} REQUIRED)
+
+#find_package(yaml-cpp 0.5.2 EXACT REQUIRED)
+#include_directories(${yaml-cpp_INCLUDE_DIRS})
 
 #######################
 ## libwalkman_master
