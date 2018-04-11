@@ -24,7 +24,6 @@
 #include <protobuf/ecat_pdo.pb.h>
 
 #include <map>
-#include <bitset>
 
 namespace iit {
 namespace ecat {
@@ -38,7 +37,6 @@ static float M2J ( float p, int s, float o ) {
     return ( ( p - M_PI + ( s*o ) ) /s );
 }
 }
-
 
 
 struct CentAcEscSdoTypes {
@@ -201,6 +199,7 @@ struct BIT_FAULT {
     uint16_t  c28_v_batt_read_fault:1;  // ?
     uint16_t  c28_spare_0:1;
     uint16_t  c28_spare_1:1;
+    
    
     std::ostream& dump ( std::ostream& os, const std::string delim ) const {
     
@@ -309,11 +308,11 @@ struct CentAcLogTypes {
 };
 
 
-/**
-*
-* 
-* 
-**/
+/*
+ *
+ * 
+ * 
+ */
 
 class CentAcESC :
     public BasicEscWrapper<McEscPdoTypes,CentAcEscSdoTypes>,
@@ -695,41 +694,6 @@ public :
         return set_ctrl_status_X ( this, CTRL_POWER_MOD_OFF );
     }
 
-    virtual void start_log ( bool start ) {
-        Log::start_log ( start );
-    }
-
-    virtual void handle_fault ( void ) {
-
-        centAC_fault_t fault;
-        centAC_fault_t old;
-        std::ostringstream oss;
-        std::ostringstream osss;
-            
-        fault.all = rx_pdo.fault;
-        active_faults = fault;
-        std::bitset<sizeof(fault)> bs_fault(fault.all);
-        
-        if ( fault_log.empty() ) {
-            fault_log.push_back(fault.bit);
-        }
-        old.bit = fault_log.back();
-
-        // checking faults transition ON->OFF or OFF->ON
-        if ( old.all != fault.all ) {
-            fault_log.push_back(fault.bit);
-            check(oss, "\n\t", old, fault);
-            oss << active_faults;
-            DPRINTF("[%d]fault 0x%04X old 0x%04X\n\t", sdo.Joint_robot_id,
-                fault.all, old.all);
-            DPRINTF("%s\n", oss.str().c_str() );
-
-        }
-        
-        // acknoledge
-        tx_pdo.fault_ack = fault.all;
-    }
-
     /////////////////////////////////////////////
     // set pdo data
     // TODO check valid range
@@ -802,6 +766,39 @@ public :
             return 0;
         }
 
+    }
+
+    virtual void handle_fault ( void ) {
+
+        centAC_fault_t fault;
+        centAC_fault_t old;
+        std::ostringstream oss;
+        std::ostringstream osss;
+            
+        fault.all = rx_pdo.fault;
+        
+        if ( fault_log.empty() ) {
+            fault_log.push_back(fault.bit);
+        }
+        old.bit = fault_log.back();
+
+        // checking faults transition ON->OFF or OFF->ON
+        if ( old.all != fault.all ) {
+            fault_log.push_back(fault.bit);
+            check(oss, "\n\t", old, fault);
+            oss << fault;
+            DPRINTF("[%d]fault 0x%04X old 0x%04X\n\t", sdo.Joint_robot_id,
+                fault.all, old.all);
+            DPRINTF("%s\n", oss.str().c_str() );
+        }
+        
+        // acknoledge only bits 3..6 -> 0x78
+        tx_pdo.fault_ack = fault.all & 0x78;
+    }
+
+
+    virtual void start_log ( bool start ) {
+        Log::start_log ( start );
     }
 
     /**
@@ -928,7 +925,7 @@ private:
         return EC_BOARD_OK;
     }
     
-    void pb_toString( std::string * pb_str , const pdo_rx_t _pdo_rx) {
+    void xyz_pb_toString( std::string * pb_str , const pdo_rx_t _pdo_rx) {
             static struct timespec ts;
             clock_gettime(CLOCK_MONOTONIC, &ts);
             // Header
@@ -960,8 +957,7 @@ private:
 
     objd_t * SDOs;
     
-    FaultLog        fault_log;
-    centAC_fault_t  active_faults;
+    FaultLog    fault_log;
     
     iit::advr::Ec_slave_pdo pb_rx_pdo;
             

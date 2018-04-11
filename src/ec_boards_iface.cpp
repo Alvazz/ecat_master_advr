@@ -23,8 +23,7 @@ Ec_Boards_ctrl::Ec_Boards_ctrl ( std::string config_file ) {
     }
 
     root_cfg = YAML::LoadFile ( config_file );
-
-    const YAML::Node& board_ctrl = root_cfg["ec_board_ctrl"];
+    board_ctrl = root_cfg["ec_board_ctrl"];
 
     eth_if = board_ctrl["eth_iface"].as<std::string>();
     sync_cycle_time_ns = board_ctrl["sync_cycle_time_ns"].as<uint32_t>();
@@ -37,7 +36,7 @@ Ec_Boards_ctrl::~Ec_Boards_ctrl() {
     bool do_power_off = false;
     std::cout << "~" << typeid ( this ).name() << std::endl;
     // std::shared_ptr slaves
-    if ( root_cfg["ec_board_ctrl"]["power_off_boards"].as<bool>() == true ) {
+    if ( board_ctrl["power_off_boards"].as<bool>() == true ) {
         do_power_off = true;
     }
     shutdown(do_power_off);
@@ -45,7 +44,11 @@ Ec_Boards_ctrl::~Ec_Boards_ctrl() {
 
 int Ec_Boards_ctrl::init ( void ) {
 
-    if ( iit::ecat::initialize ( eth_if.c_str() ) > 0 ) {
+    bool reset_micro;
+    try { reset_micro = board_ctrl["reset_micro"].as<bool>();
+    } catch ( YAML::Exception &e ) { reset_micro = true; };
+    
+    if ( iit::ecat::initialize ( eth_if.c_str(), reset_micro ) > 0 ) {
         factory_board();
         return EC_BOARD_OK;
     }
