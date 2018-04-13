@@ -26,9 +26,9 @@ Ec_Boards_ctrl::Ec_Boards_ctrl ( std::string config_file ) {
     board_ctrl = root_cfg["ec_board_ctrl"];
 
     eth_if = board_ctrl["eth_iface"].as<std::string>();
-    sync_cycle_time_ns = board_ctrl["sync_cycle_time_ns"].as<uint32_t>();
-    sync_cycle_offset_ns = board_ctrl["sync_cycle_offset_ns"].as<uint32_t>();
-
+    ec_thread_arg.ecat_cycle_ns = board_ctrl["sync_cycle_time_ns"].as<uint32_t>();
+    ec_thread_arg.ecat_cycle_shift_ns = board_ctrl["sync_cycle_offset_ns"].as<uint32_t>();
+    ec_thread_arg.sync_point_ns = board_ctrl["sync_point_ns"].as<uint32_t>();
 }
 
 Ec_Boards_ctrl::~Ec_Boards_ctrl() {
@@ -221,7 +221,7 @@ int Ec_Boards_ctrl::configure_boards ( void ) {
 
 int Ec_Boards_ctrl::set_operative ( void ) {
 
-    expected_wkc = iit::ecat::operational ( sync_cycle_time_ns, sync_cycle_offset_ns );
+    expected_wkc = iit::ecat::operational ( ec_thread_arg );
     return expected_wkc;
 }
 

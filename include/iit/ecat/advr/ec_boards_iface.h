@@ -252,9 +252,11 @@ private:
     
     std::string     eth_if;
 
-    uint32_t    sync_cycle_time_ns;
-    uint32_t    sync_cycle_offset_ns;
+//     uint32_t    sync_cycle_time_ns;
+//     uint32_t    sync_cycle_offset_ns;
 
+    iit::ecat::ec_thread_arg_t ec_thread_arg;
+    
     YAML::Node  board_ctrl;
     
 #ifdef __COBALT__
