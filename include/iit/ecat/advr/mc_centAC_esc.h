@@ -377,8 +377,11 @@ protected :
 
         ///////////////////////////////////////////////////
         // - transformation from Motor to Joint
-        rx_pdo.link_pos = centac_esc::M2J ( rx_pdo.link_pos,_sgn,_offset );
-        rx_pdo.motor_pos = centac_esc::M2J ( rx_pdo.motor_pos,_sgn,_offset );
+        rx_pdo.link_pos   = centac_esc::M2J ( rx_pdo.link_pos,_sgn,_offset );
+        rx_pdo.motor_pos  = centac_esc::M2J ( rx_pdo.motor_pos,_sgn,_offset );
+        rx_pdo.link_vel  *= _sgn;
+        rx_pdo.motor_vel *= _sgn;
+        rx_pdo.torque    *= _sgn;
         
         ///////////////////////////////////////////////////
         // - pdo_aux
@@ -702,11 +705,11 @@ public :
         return EC_BOARD_OK;
     }
     virtual int set_velRef ( float joint_vel ) {
-        tx_pdo.vel_ref = (int16_t)(joint_vel*1000);
+        tx_pdo.vel_ref = (int16_t)(joint_vel*_sgn);
         return EC_BOARD_OK;
     }
     virtual int set_torRef ( float joint_tor ) {
-        tx_pdo.tor_ref = (int16_t)(joint_tor*100);
+        tx_pdo.tor_ref = (int16_t)(joint_tor*_sgn);
         return EC_BOARD_OK;
     }
     virtual int set_ivRef ( float joint_iv ) {
