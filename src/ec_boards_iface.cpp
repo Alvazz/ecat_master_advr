@@ -28,7 +28,10 @@ Ec_Boards_ctrl::Ec_Boards_ctrl ( std::string config_file ) {
     eth_if = board_ctrl["eth_iface"].as<std::string>();
     ec_thread_arg.ecat_cycle_ns = board_ctrl["sync_cycle_time_ns"].as<uint32_t>();
     ec_thread_arg.ecat_cycle_shift_ns = board_ctrl["sync_cycle_offset_ns"].as<uint32_t>();
-    ec_thread_arg.sync_point_ns = board_ctrl["sync_point_ns"].as<uint32_t>();
+    try { ec_thread_arg.sync_point_ns = board_ctrl["sync_point_ns"].as<uint32_t>();
+    } catch ( YAML::Exception &e ) { ec_thread_arg.sync_point_ns = 500000; };
+
+    
 }
 
 Ec_Boards_ctrl::~Ec_Boards_ctrl() {
